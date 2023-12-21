@@ -1,0 +1,686 @@
+import random
+from move import *
+from util import is_even, withinBoard, getOpponentColor, toIndexes
+
+
+class Game:
+    
+    def __init__(self, board, player, computer):
+        self.board = board
+        self.player = player
+        self.computer = computer
+        self.turn = COLORS[0] # white has first move 
+            
+    def startGame(self):
+        while(1):
+            self.turn = COLORS[0]
+            self.printBoard()
+            
+            user_move = input("Your move...\n>")
+            # make sure user input is valid and convert to proper form if necessary
+            user_move = Move(user_move)
+            
+            if(user_move.move == None):
+                print("Invalid move...")
+                continue 
+            
+            # find the piece associated with the players move 
+            square = self.findPiece(user_move)
+            if(square == None):
+                print("Piece not found...")
+                continue
+            print(f"Piece found at: {square.label}")
+            
+            # check those potential moves as being blocked, puts the player in checkmate
+
+            legal_moves = self.get_legal_moves(square.piece)
+            print(legal_moves)
+            
+            # check that the players choice is in legal_moves
+            valid = False
+            for move in legal_moves:
+                if(move.move == user_move.move):
+                    valid = True
+                    break
+            if(not valid):
+                print(f"{user_move} is an invalid move...")
+                continue
+            
+            
+            # move the player's piece to the designated square
+            self.board.movePiece(square.label, user_move.getLabel())
+            
+            # change the turn to black
+            self.turn = COLORS[1]
+            
+            # determine the computers move
+            computerMove = self.computerMove()
+            
+            # find the square associated with that move 
+            computer_input = self.findPiece(computerMove)
+            
+            self.board.movePiece(computer_input.label, computerMove.getLabel())
+            print(f"Computer: {computerMove}")
+            
+            
+            
+            
+    """
+    Find a random move for the computer to play
+    Returns a tuple of the coordinates that the computer wants to go
+    """
+    def computerMove(self):
+        # Get all the possible moves 
+        allMoves = self.getAllMoves(self.turn)
+        print("All moves for computer: ", end="")
+        print(allMoves)
+        
+        randomMove = random.choice(allMoves) # random choice of piece
+        return randomMove
+    
+    def printBoard(self):
+        print("-"*24)
+        for row in self.board.getBoard():
+            for square in row:
+                print(square, end=" ")
+            print()
+        print("-"*24)
+
+    def get_legal_moves(self, piece):
+        pieceType = type(piece)
+        if pieceType == Pawn:
+            return self.pawn_legal_moves(piece)
+        elif pieceType == Knight:
+            return self.knight_legal_moves(piece)
+        elif pieceType == Bishop:
+            return self.bishop_legal_moves(piece)  
+        elif pieceType == Rook:
+            return self.rook_legal_moves(piece)
+        elif pieceType == Queen:
+            return self.queen_legal_moves(piece)
+        else:
+            return self.king_legal_moves(piece)      
+        
+    """
+    Gets all the legal moves of a pawn defined by piece.
+    Returns a list of moves that the piece can take.
+    """
+    def pawn_legal_moves(self, piece):
+        valid_moves = []
+        currentPosition = toIndexes(piece.currentSquare) # returns tuple of indexes
+
+        if(piece.hasMoved == False):
+            if(piece.color == COLORS[1]):
+                # different coordinates for different colors
+                newLabel = Move.toLabels((currentPosition[0] + 2, currentPosition[1]))
+                
+                # only count if there is no piece blocking
+                if(not self.hasPiece(newLabel)):
+                    valid_moves.append( Move("P"+newLabel) )
+                
+            else:
+                # pawns can move 2 squares on their first turn 
+                newLabel = Move.toLabels((currentPosition[0] - 2, currentPosition[1]))
+                
+                if(not self.hasPiece(newLabel)):
+                    valid_moves.append( Move("P"+newLabel) )
+
+        
+        rowChange = 1 if self.turn == COLORS[1] else -1
+            
+        newPosition = (currentPosition[0] + rowChange, currentPosition[1])
+        
+        # check immediately in front of the pawn black or white
+        if withinBoard(newPosition[0], newPosition[1]):
+            newLabel = Move.toLabels(newPosition)
+            if not self.hasPiece(newLabel):
+                valid_moves.append(Move("P"+newLabel))
+        
+        # check for diagonal opponent pieces on the left and right side
+        for value in (-1, 1):
+            newPosition = (currentPosition[0] + rowChange, currentPosition[1] + value)
+            if withinBoard(newPosition[0], newPosition[1]):
+                newLabel = Move.toLabels(newPosition)
+                diagonal_piece_color = self.hasPiece(newLabel)
+                if diagonal_piece_color != None:                    
+                    if diagonal_piece_color != self.turn:
+                        # there is an opponent piece at the left diagonal
+                        valid_moves.append(Move("Px"+newLabel))
+                        
+                        
+        return valid_moves            
+            
+    def knight_legal_moves(self, piece):
+        # get the board indexes of the horse 
+        currentPosition = toIndexes(piece.currentSquare)
+        valid_moves = []
+        
+        # the horse has 8 possible moves, some of which can be outside the range of the board
+        values = ((-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1))
+        for value in values:
+            # get a tuple of the new potential position
+            newPosition = (currentPosition[0]+value[0], currentPosition[1]+value[1])
+            
+            # only add this new position to the potential moves if it is within the board coordinate system
+            if(withinBoard(newPosition[0], newPosition[1])):
+                
+                newLabel = Move.toLabels(newPosition)
+                
+                # check if square is occupied and by which color piece
+                potential_position_piece_color = self.hasPiece(newLabel)
+                if(potential_position_piece_color == None):
+                    # Blank space, append to valid moves
+                    valid_moves.append(Move("N"+newLabel))
+                    continue
+                    
+                if(potential_position_piece_color == self.turn):
+                    # do not add to the list of moves if there is a piece as the same color of the potential position
+                    continue
+                
+                if(potential_position_piece_color != self.turn):
+                    # square is occupied by an opponent piece 
+                    valid_moves.append(Move("Nx"+newLabel))
+                
+                
+        return valid_moves
+        
+    def bishop_legal_moves(self, piece):
+        currentPosition = toIndexes(piece.currentSquare)
+        valid_moves = []
+        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
+        for i in values:
+            for j in range(1, 8):
+                newPosition = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
+                
+                # break out of this loop if outside the board and go to next diagonal
+                if (not withinBoard(newPosition[0], newPosition[1])):
+                    break
+
+                # if a piece blocks this diagonal, check if it belongs to white or black
+                newLabel = Move.toLabels(newPosition)
+                potential_position_piece_color = self.hasPiece(newLabel)
+                if(potential_position_piece_color != None):
+                    # a piece exists at this square
+                    # if the piece is the same color as the player then the position, and all after it are blocked
+                    # if the piece is the opponents color, then only that square can be legally moved it, and all after it 
+                    # are blocked 
+                    if(potential_position_piece_color == self.turn):
+                        break
+                    else:
+                        # opponent color case
+                        valid_moves.append(Move(str(piece)+"x"+newLabel))
+                        break
+                
+                # there is nothing in the path of the bishop, append to the possible moves list 
+                valid_moves.append(Move(str(piece)+newLabel))
+                
+        return valid_moves
+
+    def rook_legal_moves(self, piece):
+        currentPosition = toIndexes(piece.currentSquare)
+        valid_moves = []
+        
+        # horizontal/vertical movement
+        # horizontal movement
+        for i in range(-1, 2, 2):
+            for j in range(1, 8):
+                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
+                
+                # check if the new position is within the board
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                
+                newLabel = Move.toLabels(newPosition)
+                # check for piece blocking a square 
+                newPositionPieceColor = self.hasPiece(newLabel)
+                if(newPositionPieceColor == None):
+                    # nothing blocking piece
+                    valid_moves.append(Move(str(piece)+newLabel))
+                    continue
+                
+                if(newPositionPieceColor == self.turn):
+                    # blocked by same color piece 
+                    break
+                
+                if(newPositionPieceColor != self.turn):
+                    # blocked by opponent color piece
+                    valid_moves.append(Move(str(piece)+"x"+newLabel))
+                    break
+                
+        # vertical movement 
+        for i in range(-1, 2, 2):
+            for j in range(1, 8):
+               
+                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
+                newLabel = Move.toLabels(newPosition)
+                
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                
+                newPositionPieceColor = self.hasPiece(newLabel)
+                if(newPositionPieceColor == None):
+                    # nothing blocking piece
+                    valid_moves.append(Move(str(piece)+newLabel))
+                    continue
+                
+                if(newPositionPieceColor == self.turn):
+                    # blocked by same color piece 
+                    break
+                
+                if(newPositionPieceColor != self.turn):
+                    # blocked by opponent color piece
+                    valid_moves.append(Move(str(piece)+"x"+newLabel))
+                    break
+                
+        return valid_moves       
+        
+    def queen_legal_moves(self, piece):
+        valid_moves = self.bishop_legal_moves(piece)
+        valid_moves.extend(self.rook_legal_moves(piece))
+        return valid_moves
+
+    def king_legal_moves(self, piece):
+        currentPosition = toIndexes(piece.currentSquare)
+        valid_moves = []
+        
+        # define the directional movement, goes clockwise 
+        directions = ((-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1))
+        for direction in directions:
+            # get the new direction
+            newPosition = (currentPosition[0] + direction[0], currentPosition[1] + direction[1])
+            
+        
+            # skip if not in bounds
+            if(not withinBoard(newPosition[0], newPosition[1])):
+                continue
+            
+            newLabel = Move.toLabels(newPosition)
+            
+            # check for blocking piece 
+            newPositionPieceColor = self.hasPiece(newLabel)
+            if(newPositionPieceColor == None):
+                # No blocking piece, make sure this move doesn't cause the king to be captured
+                if(not self.can_be_captured(newLabel, getOpponentColor(self.turn))):
+                    valid_moves.append(Move("K"+newLabel))
+            
+            elif(newPositionPieceColor != self.turn):
+                # Blocked by opponent piece
+                if(not self.can_be_captured(newLabel, getOpponentColor(self.turn))):
+                    valid_moves.append(Move("Kx"+newLabel))
+                    
+        return valid_moves
+                
+    """
+    Determines if a given square specified by "label" has a piece.
+    If a piece exists, returns the color of the piece.
+    """
+    def hasPiece(self, label:str) -> bool:
+        if(self.board.getSquare(label).hasPiece()):
+            return self.board.getSquare(label).piece.color
+        return None
+        
+    """ 
+    Gets all of the possible moves for Black or White.
+    Returns a 1d array of all the possible moves in label format ex. 'Bd4', 'Pe5', etc.
+    """  
+    def getAllMoves(self, color):
+        board = self.board.getBoard()
+        allMoves = []
+        
+        for row in board:
+            for square in row:
+                if(square.piece != None):
+                    if(square.piece.color == color):
+                        piece_legal_moves = self.get_legal_moves(square.piece)
+                        if(len(piece_legal_moves) == 0):
+                            continue
+                        allMoves.extend(piece_legal_moves)
+                        
+        return allMoves
+        
+        
+    """
+    Given a move find the current piece on the board 
+    Returns the square that the piece is on
+    """ 
+    def findPiece(self, move):        
+        # find the square that the piece is on
+        board = self.board.getBoard()
+        for row in board:
+            for square in row:
+                if(str(square.piece) == move.move[0]):
+                    if(square.piece.color == self.turn):
+                        # found a potential piece 
+                        # check the possible moves 
+                        potential_moves = self.get_legal_moves(square.piece)
+                        print(f"Potential Moves for {square.piece}{square.label}: ", end='')
+                        print(potential_moves)
+                        if(move in potential_moves):
+                            # found, check for duplicates
+                            if move.hasAmbiguitySymbol():
+                                if square.piece.currentSquare[0] == move.getAmbiguitySymbol():
+                                    # correct column/file
+                                    return square
+                                else:
+                                    continue
+                            # no duplicates (hopefully)
+                            return square
+
+
+    """
+    Determines if a piece (defined by label) can be captured by the opponent.
+    Returns True if it can, False otherwise.
+    Particularly useful for determining valid moves.
+    """
+    def can_be_captured(self, label, opponentColor) -> bool:
+        # get all the possible moves of the opponent
+        # returns a list of all moves in label format: ex. 'Qg4'
+        return False
+            
+        
+
+class Board:
+    # initalizes the board full of squares 
+    def __init__(self):
+        self.board = []
+
+        
+        # initalize all the squares
+        for i in range(8):
+            currentRow = []
+            for j in range(8):
+                colorSelection = COLORS[0] if is_even(i + j) else COLORS[1]
+                currentRow.append(Square(label=LETTERS[j]+str(8-i), color=colorSelection))     
+            self.board.append(currentRow)
+            
+        # add the pieces to the default squares   
+        for i in range(8):
+            # add all the pawns
+            self.board[1][i].addPiece(Pawn(PIECE_NAMES[0], COLORS[1], self.board[1][i].getLabel()))
+            self.board[6][i].addPiece(Pawn(PIECE_NAMES[0], COLORS[0], self.board[6][i].getLabel()))    
+           
+        # add the black back rows
+        self.board[0][0].addPiece(Rook(PIECE_NAMES[3], COLORS[1], self.board[0][0].getLabel()))
+        self.board[0][7].addPiece(Rook(PIECE_NAMES[3], COLORS[1], self.board[0][7].getLabel()))
+        self.board[0][1].addPiece(Knight(PIECE_NAMES[1], COLORS[1], self.board[0][1].getLabel()))
+        self.board[0][6].addPiece(Knight(PIECE_NAMES[1], COLORS[1], self.board[0][6].getLabel()))
+        self.board[0][2].addPiece(Bishop(PIECE_NAMES[2], COLORS[1], self.board[0][2].getLabel()))
+        self.board[0][5].addPiece(Bishop(PIECE_NAMES[2], COLORS[1], self.board[0][5].getLabel()))
+        self.board[0][3].addPiece(Queen(PIECE_NAMES[4], COLORS[1], self.board[0][3].getLabel()))
+        self.board[0][4].addPiece(King(PIECE_NAMES[5], COLORS[1], self.board[0][4].getLabel()))
+            
+        # add the white back rows
+        self.board[7][0].addPiece(Rook(PIECE_NAMES[3], COLORS[0], self.board[7][0].getLabel()))
+        self.board[7][7].addPiece(Rook(PIECE_NAMES[3], COLORS[0], self.board[7][7].getLabel()))
+        self.board[7][1].addPiece(Knight(PIECE_NAMES[1], COLORS[0], self.board[7][1].getLabel()))
+        self.board[7][6].addPiece(Knight(PIECE_NAMES[1], COLORS[0], self.board[7][6].getLabel()))
+        self.board[7][2].addPiece(Bishop(PIECE_NAMES[2], COLORS[0], self.board[7][2].getLabel()))
+        self.board[7][5].addPiece(Bishop(PIECE_NAMES[2], COLORS[0], self.board[7][5].getLabel()))
+        self.board[7][3].addPiece(Queen(PIECE_NAMES[4], COLORS[0], self.board[7][3].getLabel()))
+        self.board[7][4].addPiece(King(PIECE_NAMES[5], COLORS[0], self.board[7][4].getLabel()))
+            
+            
+    # returns the current board
+    def getBoard(self):
+        return self.board
+    
+    # Moves a piece from square 1 to square 2, assumes this move is completely valid
+    def movePiece(self, fromLabel, toLabel):
+        pieceCopy = None
+        # find the fromLabel square
+        for row in self.board:
+            for square in row:
+                if(square.label == fromLabel):
+                    # remove the piece from the square
+                    pieceCopy = square.piece
+                    square.piece = None
+
+
+        if(pieceCopy == None):
+            print("DEBUG: piece was not found on the board...")
+            return
+
+        # find the toLabel square
+        for row in self.board:
+            for square in row:
+                if (square.label == toLabel):
+                    # add the piece to the square at the toLabel
+                    pieceCopy.setCurrentSquare(toLabel)
+                    square.piece = pieceCopy
+                    
+                    if(type(pieceCopy) == Pawn):
+                        pieceCopy.hasMoved = True
+                        
+                    break
+                    
+                    
+        return 1
+
+    # Return the square with the given label
+    def getSquare(self, label):
+        index = toIndexes(label)
+        
+        return self.board[index[0]][index[1]]
+          
+            
+class Square:
+    def __init__(self, label, color, piece=None):
+        self.label = label 
+        self.piece = piece
+        self.color = color
+        
+    def __str__(self):
+        if self.piece == None:
+            return "__"
+        return str(self.piece)+" "
+    
+    def getLabel(self):
+        return self.label
+    
+    
+    # adds a piece to the square
+    def addPiece(self, piece):
+        self.piece = piece
+        
+        
+    # remove a piece from the square
+    def removePiece(self):
+        pieceCopy = self.piece    
+        self.piece = None
+        return pieceCopy    
+    
+    def hasPiece(self):
+        if(self.piece == None):
+            return False
+        return True
+             
+class Piece:
+    def __init__(self, name, color, currentSquare):
+        self.name = name
+        self.color = color
+        self.currentSquare = currentSquare
+        
+    def setCurrentSquare(self, label):
+        self.currentSquare = label    
+        
+ 
+    def __str__(self):
+        return self.name
+       
+class Pawn(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)
+        self.hasMoved = False 
+    
+    # Returns a list of all possible moves given the current square as a tuple of INDEXES
+    # Does not consider these moves in the context of the current board
+    def valid_moves(self):
+        valid_moves = []
+        currentPosition = toIndexes(self.currentSquare) # returns tuple of indexes
+
+        if(self.hasMoved == False):
+            if(self.color == COLORS[1]):
+                # different coordinates for different colors
+                
+                valid_moves.append( (currentPosition[0] + 2, currentPosition[1]) )
+                
+            else:
+                # pawns can move 2 squares on their first turn 
+                valid_moves.append( (currentPosition[0] - 2, currentPosition[1]) )
+        
+        if(self.color == COLORS[1]):
+            valid_moves.append( (currentPosition[0] + 1, currentPosition[1])) 
+        else: 
+            valid_moves.append( (currentPosition[0] - 1, currentPosition[1])) 
+        
+        return valid_moves
+    
+    
+    
+    def __str__(self):
+        return "P"
+           
+class Knight(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)        
+        
+    def valid_moves(self):
+        # get the board indexes of the horse 
+        currentPosition = toIndexes(self.currentSquare)
+        valid_moves = []
+        
+        # the horse has 8 possible moves, some of which will be outside the range of the board
+        values = ((-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1))
+        for value in values:
+            # get a tuple of the new potential position
+            newPosition = (currentPosition[0]+value[0], currentPosition[1]+value[1])
+            
+            # only add this new position to the potential moves if it is within the board coordinate system
+            if(withinBoard(newPosition[0], newPosition[1])):
+                valid_moves.append(newPosition)
+                
+        return valid_moves
+            
+        
+    def __str__(self):
+        return "N"
+        
+class Bishop(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)        
+        
+    def valid_moves(self):
+        currentPosition = toIndexes(self.currentSquare)
+        potential_moves = []
+        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
+        for i in values:
+            for j in range(1, 8):
+                potential_position = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
+                                
+                # break out of this loop if outside the board and go to next diagnol
+                if(potential_position[0] < 0 or potential_position[0] > 7):
+                    break
+                if(potential_position[1] < 0 or potential_position[1] > 7):
+                    break
+                
+                
+                potential_moves.append(potential_position)
+                
+        return potential_moves
+           
+        
+    def __str__(self):
+        return "B"
+        
+class Rook(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)        
+        
+    def valid_moves(self):
+        currentPosition = toIndexes(self.currentSquare)
+        potential_moves = []
+        
+        # horizontal/vertical movement
+        # horizontal movement
+        for i in range(-1, 2, 2):
+            for j in range(1, 8):
+                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                potential_moves.append(newPosition)
+                
+        # vertical movement 
+        for i in range(-1, 2, 2):
+            for j in range(1, 8):
+                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                potential_moves.append(newPosition)
+    
+        return potential_moves
+        
+            
+        
+    def __str__(self):
+        return "R"
+        
+class Queen(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)        
+        
+    def valid_moves(self):
+        currentPosition = toIndexes(self.currentSquare)
+        potential_moves = []
+        
+        # horizontal movement
+        for i in range(-1, 2, 2):
+            for j in range(1,8):
+                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                potential_moves.append(newPosition)
+                
+        # vertical movement 
+        for i in range(-1, 2, 2):
+            for j in range(1,8):
+                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
+                if(not withinBoard(newPosition[0], newPosition[1])):
+                    break
+                potential_moves.append(newPosition)
+            
+        # diagonal movement 
+        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
+        for i in values:
+            for j in range(1, 8):
+                newPosition = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
+                
+                # break out of this loop if outside the board and go to next diagnol
+                if(newPosition[0] < 0 or newPosition[0] > 7):
+                    break
+                if(newPosition[1] < 0 or newPosition[1] > 7):
+                    break
+                
+                potential_moves.append(newPosition)                
+            
+        return potential_moves
+        
+    def __str__(self):
+        return "Q"
+    
+    
+class King(Piece):
+    def __init__(self, name, color, currentSquare):
+        super().__init__(name, color, currentSquare)        
+               
+    def __str__(self):
+        return "K"
+        
+        
+class Player:
+    def __init__(self, name, color=COLORS[0]):
+        self.name = name
+        self.color = color
+        self.pieces = None
+
+
+
