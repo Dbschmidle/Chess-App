@@ -5,6 +5,21 @@ from util import *
 from piece import *
 from computer import *
 
+
+"""
+Defines a game of chess. 
+- A board with alternating colored squares. Squares sometimes containing pieces.
+- A player and a computer, each defined by their own classes.
+- A turn marker, marking the color of whose turn it is.
+
+The game also determines:
+- Where its pieces are
+- If a move is valid or not 
+- Whether the user has stopped playing
+- Getting all the possible moves for black or white.
+- etc.
+
+"""
 class Game:
     def __init__(self, board, player, computer):
         self.board = board
