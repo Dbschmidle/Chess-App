@@ -2,10 +2,13 @@ from constants import *
 from piece import *
 from game import *
 from util import toIndexes
+from colorama import Fore, Back, Style
+
 """
 The board class defines the physical board that is used for the game of chess. 
     - A board is full of alternating black and white squares.
     - Squares potentailly have pieces on them.
+    - Responsible for displaying the board.
 """
 class Board:
     # initalizes the board full of squares 
@@ -48,6 +51,28 @@ class Board:
         self.board[7][4].addPiece(King(PIECE_NAMES[5], COLORS[0], self.board[7][4].getLabel()))
             
             
+    def displayBoard(self):
+        print("-"*24)
+        for row in self.board:
+            for square in row:
+                
+                piece_abb = str(square)
+                piece_abb = Style.NORMAL + piece_abb
+                # determine the background color
+                piece_abb = Back.LIGHTWHITE_EX + piece_abb if square.color == COLORS[0] else Back.LIGHTGREEN_EX + piece_abb
+                # determine the piece color (if the square has a piece)
+                if(square.hasPiece()):
+                    piece_abb = Fore.WHITE + piece_abb if square.piece.color == COLORS[0] else Fore.BLACK + piece_abb
+                
+                print(piece_abb, end=" ")
+                
+            
+            print()
+        # reset the style
+        print(Style.RESET_ALL)
+        print("-"*24)
+        
+            
     # returns the current board
     def getBoard(self):
         return self.board
@@ -67,7 +92,7 @@ class Square:
         
     def __str__(self):
         if self.piece == None:
-            return "__"
+            return "  "
         return str(self.piece)+" "
     
     def getLabel(self):

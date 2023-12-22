@@ -7,8 +7,6 @@ from util import *
 from piece import *
 from computer import *
 
-
-
 """
 Defines a game of chess. 
 - A board with alternating colored squares. Squares sometimes containing pieces.
@@ -34,7 +32,7 @@ class Game:
     def startGame(self):
         while(1):
             self.turn = COLORS[0]
-            self.printBoard()
+            self.board.displayBoard()
             
             user_input = input("Your move...\n>")
             # make sure user input is valid and convert to proper form if necessary
@@ -97,17 +95,6 @@ class Game:
             if(user_input == exit):
                 sys.exit()
                 
-        
-        
-            
-    def printBoard(self):
-        print("-"*24)
-        for row in self.board.getBoard():
-            for square in row:
-                print(square, end=" ")
-            print()
-        print("-"*24)
-
     def get_legal_moves(self, piece):
         pieceType = type(piece)
         if pieceType == Pawn:
