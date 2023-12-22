@@ -1,7 +1,9 @@
 import random
+import sys
 from move import *
 from util import *
 from piece import *
+from computer import *
 
 class Game:
     def __init__(self, board, player, computer):
@@ -15,16 +17,19 @@ class Game:
             self.turn = COLORS[0]
             self.printBoard()
             
-            user_move = input("Your move...\n>")
+            user_input = input("Your move...\n>")
             # make sure user input is valid and convert to proper form if necessary
-            user_move = Move(user_move)
+            # exit the program if the user entered ex. "quit"
+            Game.checkExit(user_input)
+            
+            user_move = Move(user_input)
             
             if(user_move.move == None):
                 print("Invalid move...")
                 continue 
             
             # find the piece associated with the players move 
-            square = self.findPiece(user_move)
+            square = self.findSquare(user_move)
             if(square == None):
                 print("Piece not found...")
                 continue
@@ -53,30 +58,29 @@ class Game:
             self.turn = COLORS[1]
             
             # determine the computers move
-            computerMove = self.computerMove()
+            computerMove = Computer.computerMove(self)
             
             # find the square associated with that move 
-            computer_input = self.findPiece(computerMove)
+            computer_input = self.findSquare(computerMove)
             
             self.board.movePiece(computer_input.label, computerMove.getLabel())
             print(f"Computer: {computerMove}")
-            
-            
-            
-            
-    """
-    Find a random move for the computer to play
-    Returns a tuple of the coordinates that the computer wants to go
-    """
-    def computerMove(self):
-        # Get all the possible moves 
-        allMoves = self.getAllMoves(self.turn)
-        print("All moves for computer: ", end="")
-        print(allMoves)
-        
-        randomMove = random.choice(allMoves) # random choice of piece
-        return randomMove
     
+    
+    
+    """
+    Checks if the user has entered input that indicates they want to
+    gracefully exit the program.
+    """        
+    def checkExit(user_input):
+        user_input = user_input.lower()
+        for exit in ("q", "quit", "exit"):
+            if(user_input == exit):
+                sys.exit()
+                
+        
+        
+            
     def printBoard(self):
         print("-"*24)
         for row in self.board.getBoard():
@@ -342,7 +346,7 @@ class Game:
     Given a move find the current piece on the board 
     Returns the square that the piece is on
     """ 
-    def findPiece(self, move):        
+    def findSquare(self, move):        
         # find the square that the piece is on
         board = self.board.getBoard()
         for row in board:
