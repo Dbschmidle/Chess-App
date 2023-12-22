@@ -1,8 +1,16 @@
+"""
+A piece is a baseclass for a type of piece in chess.
+    - Pawm, Knight, Bishop, etc.
+    - Each piece has a value associated with it. 
+    - Each piece has a square that it sits on (unless it has been taken in which case it will be None)
+
+"""
 class Piece:
     def __init__(self, name, color, currentSquare):
         self.name = name
         self.color = color
         self.currentSquare = currentSquare
+        self.value = 0
         
     def setCurrentSquare(self, label):
         self.currentSquare = label    
@@ -11,10 +19,12 @@ class Piece:
     def __str__(self):
         return self.name
        
+       
 class Pawn(Piece):
     def __init__(self, name, color, currentSquare):
         super().__init__(name, color, currentSquare)
         self.hasMoved = False 
+        self.value = 1
     
     def __str__(self):
         return "P"
@@ -22,7 +32,7 @@ class Pawn(Piece):
 class Knight(Piece):
     def __init__(self, name, color, currentSquare):
         super().__init__(name, color, currentSquare)        
-                   
+        self.value = 3
         
     def __str__(self):
         return "N"
@@ -30,6 +40,8 @@ class Knight(Piece):
 class Bishop(Piece):
     def __init__(self, name, color, currentSquare):
         super().__init__(name, color, currentSquare)        
+        self.value = 3
+      
       
     def __str__(self):
         return "B"
@@ -37,6 +49,8 @@ class Bishop(Piece):
 class Rook(Piece):
     def __init__(self, name, color, currentSquare):
         super().__init__(name, color, currentSquare)               
+        self.value = 5
+        
         
     def __str__(self):
         return "R"
@@ -44,42 +58,7 @@ class Rook(Piece):
 class Queen(Piece):
     def __init__(self, name, color, currentSquare):
         super().__init__(name, color, currentSquare)        
-        
-    def valid_moves(self):
-        currentPosition = toIndexes(self.currentSquare)
-        potential_moves = []
-        
-        # horizontal movement
-        for i in range(-1, 2, 2):
-            for j in range(1,8):
-                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-                
-        # vertical movement 
-        for i in range(-1, 2, 2):
-            for j in range(1,8):
-                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-            
-        # diagonal movement 
-        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
-        for i in values:
-            for j in range(1, 8):
-                newPosition = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
-                
-                # break out of this loop if outside the board and go to next diagnol
-                if(newPosition[0] < 0 or newPosition[0] > 7):
-                    break
-                if(newPosition[1] < 0 or newPosition[1] > 7):
-                    break
-                
-                potential_moves.append(newPosition)                
-            
-        return potential_moves
+        self.value = 8
         
     def __str__(self):
         return "Q"
