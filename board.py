@@ -64,12 +64,11 @@ class Board:
                 if(square.hasPiece()):
                     piece_abb = Fore.WHITE + piece_abb if square.piece.color == COLORS[0] else Fore.BLACK + piece_abb
                 
-                print(piece_abb, end=" ")
+                print(piece_abb, end="")
                 
-            
+            # reset the style
+            print(Style.RESET_ALL, end="")
             print()
-        # reset the style
-        print(Style.RESET_ALL)
         print("-"*24)
         
             
@@ -92,8 +91,8 @@ class Square:
         
     def __str__(self):
         if self.piece == None:
-            return "  "
-        return str(self.piece)+" "
+            return "   "
+        return " "+str(self.piece)+" "
     
     def getLabel(self):
         return self.label
