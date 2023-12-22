@@ -1,9 +1,4 @@
-
-def is_even(num : int) -> bool:
-    if(num % 2 == 0):
-        return True
-    return False
-
+from constants import *
 # Converts board coordinates ex: "E4", "A8" to indexes on the board 
 # Returns a tuple of the indexes
 def toIndexes(label: str) -> (int, int):

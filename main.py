@@ -2,7 +2,7 @@ from game import *
 from computer import *
 
 def main():
-    newgame = Game(Board(), Player("David", "White"), Computer())
+    newgame = Game(Player("David", "White"), Computer())
     newgame.startGame()
     
     #knight = Knight("Knight", "White", "b1")

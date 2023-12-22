@@ -1,8 +1,4 @@
-PIECE_NAMES = ("Pawn", "Knight", "Bishop", "Rook", "Queen", "King")
-PIECE_ABB = ("P", "N", "B", "R", "Q", "K")
-LETTERS = ("a", "b", "c", "d", "e", "f", "g", "h")
-COLORS = ("White", "Black")
-
+from constants import *
 """
 A move is defined as a piece abbreviation ex. 'Q', 'R', (also 'P' for pawn in this game), 
 followed by a 'label' ex. 'e4', 'g5' that defines the square that the piece wants to go to.

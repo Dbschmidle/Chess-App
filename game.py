@@ -1,9 +1,12 @@
 import random
 import sys
+from constants import *
 from move import *
+from board import *
 from util import *
 from piece import *
 from computer import *
+
 
 
 """
@@ -22,13 +25,8 @@ The game also determines:
 
 """
 class Game:
-    PIECE_NAMES = ("Pawn", "Knight", "Bishop", "Rook", "Queen", "King")
-    PIECE_ABB = ("P", "N", "B", "R", "Q", "K")
-    LETTERS = ("a", "b", "c", "d", "e", "f", "g", "h")
-    COLORS = ("White", "Black")
-    
-    def __init__(self, board, player, computer):
-        self.board = board
+    def __init__(self, player, computer):
+        self.board = Board()
         self.player = player
         self.computer = computer
         self.turn = COLORS[0] # white has first move 
@@ -73,7 +71,7 @@ class Game:
             
             
             # move the player's piece to the designated square
-            self.board.movePiece(square.label, user_move.getLabel())
+            self.movePiece(square.label, user_move.getLabel())
             
             # change the turn to black
             self.turn = COLORS[1]
@@ -84,7 +82,7 @@ class Game:
             # find the square associated with that move 
             computer_input = self.findSquare(computerMove)
             
-            self.board.movePiece(computer_input.label, computerMove.getLabel())
+            self.movePiece(computer_input.label, computerMove.getLabel())
             print(f"Computer: {computerMove}")
     
     
@@ -400,7 +398,7 @@ class Game:
     def movePiece(self, fromLabel, toLabel):
         pieceCopy = None
         # find the fromLabel square
-        for row in self.board:
+        for row in self.board.getBoard():
             for square in row:
                 if(square.label == fromLabel):
                     # remove the piece from the square
@@ -413,7 +411,7 @@ class Game:
             return
 
         # find the toLabel square
-        for row in self.board:
+        for row in self.board.getBoard():
             for square in row:
                 if (square.label == toLabel):
                     # add the piece to the square at the toLabel
@@ -441,39 +439,6 @@ class Game:
         return False
             
         
-
-          
-            
-class Square:
-    def __init__(self, label, color, piece=None):
-        self.label = label 
-        self.piece = piece
-        self.color = color
-        
-    def __str__(self):
-        if self.piece == None:
-            return "__"
-        return str(self.piece)+" "
-    
-    def getLabel(self):
-        return self.label
-    
-    
-    # adds a piece to the square
-    def addPiece(self, piece):
-        self.piece = piece
-        
-        
-    # remove a piece from the square
-    def removePiece(self):
-        pieceCopy = self.piece    
-        self.piece = None
-        return pieceCopy    
-    
-    def hasPiece(self):
-        if(self.piece == None):
-            return False
-        return True
                      
         
 class Player:

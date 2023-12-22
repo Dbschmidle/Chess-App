@@ -1,8 +1,11 @@
-
+from constants import *
+from piece import *
+from game import *
+from util import toIndexes
 """
 The board class defines the physical board that is used for the game of chess. 
     - A board is full of alternating black and white squares.
-    
+    - Squares potentailly have pieces on them.
 """
 class Board:
     # initalizes the board full of squares 
@@ -14,7 +17,7 @@ class Board:
         for i in range(8):
             currentRow = []
             for j in range(8):
-                colorSelection = COLORS[0] if is_even(i + j) else COLORS[1]
+                colorSelection = COLORS[0] if (i+j)%2 == 0 else COLORS[1]
                 currentRow.append(Square(label=LETTERS[j]+str(8-i), color=colorSelection))     
             self.board.append(currentRow)
             
@@ -54,3 +57,35 @@ class Board:
         index = toIndexes(label)
         
         return self.board[index[0]][index[1]]
+    
+    
+class Square:
+    def __init__(self, label, color, piece=None):
+        self.label = label 
+        self.piece = piece
+        self.color = color
+        
+    def __str__(self):
+        if self.piece == None:
+            return "__"
+        return str(self.piece)+" "
+    
+    def getLabel(self):
+        return self.label
+    
+    
+    # adds a piece to the square
+    def addPiece(self, piece):
+        self.piece = piece
+        
+        
+    # remove a piece from the square
+    def removePiece(self):
+        pieceCopy = self.piece    
+        self.piece = None
+        return pieceCopy    
+    
+    def hasPiece(self):
+        if(self.piece == None):
+            return False
+        return True
