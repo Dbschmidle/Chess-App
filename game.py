@@ -1,10 +1,9 @@
 import random
 from move import *
-from util import is_even, withinBoard, getOpponentColor, toIndexes
-
+from util import *
+from piece import *
 
 class Game:
-    
     def __init__(self, board, player, computer):
         self.board = board
         self.player = player
@@ -366,7 +365,6 @@ class Game:
                             # no duplicates (hopefully)
                             return square
 
-
     """
     Determines if a piece (defined by label) can be captured by the opponent.
     Returns True if it can, False otherwise.
@@ -493,188 +491,7 @@ class Square:
         if(self.piece == None):
             return False
         return True
-             
-class Piece:
-    def __init__(self, name, color, currentSquare):
-        self.name = name
-        self.color = color
-        self.currentSquare = currentSquare
-        
-    def setCurrentSquare(self, label):
-        self.currentSquare = label    
-        
- 
-    def __str__(self):
-        return self.name
-       
-class Pawn(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)
-        self.hasMoved = False 
-    
-    # Returns a list of all possible moves given the current square as a tuple of INDEXES
-    # Does not consider these moves in the context of the current board
-    def valid_moves(self):
-        valid_moves = []
-        currentPosition = toIndexes(self.currentSquare) # returns tuple of indexes
-
-        if(self.hasMoved == False):
-            if(self.color == COLORS[1]):
-                # different coordinates for different colors
-                
-                valid_moves.append( (currentPosition[0] + 2, currentPosition[1]) )
-                
-            else:
-                # pawns can move 2 squares on their first turn 
-                valid_moves.append( (currentPosition[0] - 2, currentPosition[1]) )
-        
-        if(self.color == COLORS[1]):
-            valid_moves.append( (currentPosition[0] + 1, currentPosition[1])) 
-        else: 
-            valid_moves.append( (currentPosition[0] - 1, currentPosition[1])) 
-        
-        return valid_moves
-    
-    
-    
-    def __str__(self):
-        return "P"
-           
-class Knight(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)        
-        
-    def valid_moves(self):
-        # get the board indexes of the horse 
-        currentPosition = toIndexes(self.currentSquare)
-        valid_moves = []
-        
-        # the horse has 8 possible moves, some of which will be outside the range of the board
-        values = ((-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1))
-        for value in values:
-            # get a tuple of the new potential position
-            newPosition = (currentPosition[0]+value[0], currentPosition[1]+value[1])
-            
-            # only add this new position to the potential moves if it is within the board coordinate system
-            if(withinBoard(newPosition[0], newPosition[1])):
-                valid_moves.append(newPosition)
-                
-        return valid_moves
-            
-        
-    def __str__(self):
-        return "N"
-        
-class Bishop(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)        
-        
-    def valid_moves(self):
-        currentPosition = toIndexes(self.currentSquare)
-        potential_moves = []
-        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
-        for i in values:
-            for j in range(1, 8):
-                potential_position = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
-                                
-                # break out of this loop if outside the board and go to next diagnol
-                if(potential_position[0] < 0 or potential_position[0] > 7):
-                    break
-                if(potential_position[1] < 0 or potential_position[1] > 7):
-                    break
-                
-                
-                potential_moves.append(potential_position)
-                
-        return potential_moves
-           
-        
-    def __str__(self):
-        return "B"
-        
-class Rook(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)        
-        
-    def valid_moves(self):
-        currentPosition = toIndexes(self.currentSquare)
-        potential_moves = []
-        
-        # horizontal/vertical movement
-        # horizontal movement
-        for i in range(-1, 2, 2):
-            for j in range(1, 8):
-                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-                
-        # vertical movement 
-        for i in range(-1, 2, 2):
-            for j in range(1, 8):
-                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-    
-        return potential_moves
-        
-            
-        
-    def __str__(self):
-        return "R"
-        
-class Queen(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)        
-        
-    def valid_moves(self):
-        currentPosition = toIndexes(self.currentSquare)
-        potential_moves = []
-        
-        # horizontal movement
-        for i in range(-1, 2, 2):
-            for j in range(1,8):
-                newPosition = (currentPosition[0], currentPosition[1]+(i*j))
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-                
-        # vertical movement 
-        for i in range(-1, 2, 2):
-            for j in range(1,8):
-                newPosition = (currentPosition[0]+(i*j), currentPosition[1])
-                if(not withinBoard(newPosition[0], newPosition[1])):
-                    break
-                potential_moves.append(newPosition)
-            
-        # diagonal movement 
-        values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
-        for i in values:
-            for j in range(1, 8):
-                newPosition = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
-                
-                # break out of this loop if outside the board and go to next diagnol
-                if(newPosition[0] < 0 or newPosition[0] > 7):
-                    break
-                if(newPosition[1] < 0 or newPosition[1] > 7):
-                    break
-                
-                potential_moves.append(newPosition)                
-            
-        return potential_moves
-        
-    def __str__(self):
-        return "Q"
-    
-    
-class King(Piece):
-    def __init__(self, name, color, currentSquare):
-        super().__init__(name, color, currentSquare)        
-               
-    def __str__(self):
-        return "K"
-        
+                     
         
 class Player:
     def __init__(self, name, color=COLORS[0]):
