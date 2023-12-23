@@ -22,6 +22,7 @@ class GUI:
         self.theme = GUI.DEFAULT 
         self.size = 2 #size of the squares
         self.firstLoad = True
+        self.showLabels = True
     
     def displayBoard(self, board, turn):
         white_sqaure_color = self.theme[0]
@@ -32,7 +33,8 @@ class GUI:
         print("-"*24)
         # reverse the printing of the board if the player is playing as black
         board = reversed(board) if turn == COLORS[1] else board
-        for row in board:
+        for i, row in enumerate(board):
+            print(Fore.WHITE + str(8-i), end=" ") if self.showLabels == True else ""
             for square in row:
                 
                 piece_abb = " "+str(square)+" "
@@ -49,6 +51,13 @@ class GUI:
             # reset the style
             print(Style.RESET_ALL, end="")
             print()
+        
+        # print the labels
+        if(self.showLabels):
+            print(" "*2, end="") # some padding
+            for letter in UPP_LETTERS:
+                print(Fore.WHITE + " "+letter+" ", end="")
+            print()    
         print("-"*24)
     
     def firstTimeLoad(self):
@@ -63,7 +72,7 @@ class GUI:
             
         while(1):
             print(Fore.GREEN+"-"*24+"MENU"+"-"*24)
-            options = ("\t1) Start Game", "\t2) Change Theme", "\t3) Quit")
+            options = ("\t1) Start Game", "\t2) Change Theme", "\t3) Change Labels","\t4) Quit")
             for option in options:
                 print(Fore.BLUE + option)
                     
@@ -81,6 +90,9 @@ class GUI:
                 self.setTheme()
                 
             elif user_input == 3:
+                self.setLabels()
+        
+            elif user_input == 4:
                 print(Fore.GREEN+"Goodbye...")
                 print(Style.RESET_ALL)
                 sys.exit()
@@ -99,12 +111,43 @@ class GUI:
             except:
                 print(Fore.RED+"Invalid selection...")
                 continue
+           
+           
+    def setLabels(self):
+        while 1:
+            print(Fore.GREEN+"LABEL CHANGE")
+            options = ("\t1) On", "\t2) Off")
+            if self.showLabels:
+                print(Fore.BLUE + options[0] + " [X]")
+                print(Fore.BLUE + options[1] + " [ ]")
+            else: 
+                print(Fore.BLUE + options[0] + " [ ]")
+                print(Fore.BLUE + options[1] + " [X]")
+                
+            selection = input("\t>")
+            if(selection.lower() == "on"):
+                self.showLabels = True
+                return
+            if(selection.lower() == "off"):
+                self.showLabels = False
+                return
             
+            selection = int(selection)
+            if(selection == 1):
+                self.showLabels = True
+                return
+            if(selection == 2):
+                self.showLabels = False
+                return
+            print(Fore.RED+"Invalid input...")
             
+                
             
-    
-    
-        
+                
+            
+                
+            
+                    
     """
     Checks if the user has entered input that indicates they want to exit the game.
     Returns True or False
