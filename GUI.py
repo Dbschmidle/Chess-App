@@ -1,6 +1,6 @@
 import sys
 from constants import *
-from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style, just_fix_windows_console
 
 """
 The GUI class handles all the user interaction and displaying of the game.
@@ -10,6 +10,7 @@ Functionality:
     - Displaying the board
     - Displaying the menu
     - Checking for user exit
+    - Changing settings
     
 """
 class GUI:
@@ -20,7 +21,7 @@ class GUI:
     
     def __init__(self):
         self.theme = GUI.DEFAULT 
-        self.size = 2 #size of the squares
+        self.size = 2 #size of the squares, currently not used
         self.firstLoad = True
         self.showLabels = True
     
@@ -69,14 +70,24 @@ class GUI:
         if self.firstLoad:
             self.firstTimeLoad()
             self.firstLoad = False
+            just_fix_windows_console()
             
-        while(1):
+        while(1): 
             print(Fore.GREEN+"-"*24+"MENU"+"-"*24)
             options = ("\t1) Start Game", "\t2) Change Theme", "\t3) Change Labels","\t4) Quit")
             for option in options:
                 print(Fore.BLUE + option)
                     
-            user_input = int(input("\t>"))
+            user_input = input("\t>")
+            if self.checkExit(user_input):
+                sys.exit()
+            
+            try:
+                user_input = int(user_input)
+            except:
+                print(Fore.RED+"Invalid selection...")
+                continue
+            
             # check for in bounds
             if(user_input-1 >= len(options) or user_input-1 < 0):
                 print(Fore.RED+"Invalid selection...")
@@ -112,7 +123,6 @@ class GUI:
                 print(Fore.RED+"Invalid selection...")
                 continue
            
-           
     def setLabels(self):
         while 1:
             print(Fore.GREEN+"LABEL CHANGE")
@@ -140,19 +150,15 @@ class GUI:
                 self.showLabels = False
                 return
             print(Fore.RED+"Invalid input...")
-            
-                
-            
-                
-            
-                
-            
-                    
+                  
     """
     Checks if the user has entered input that indicates they want to exit the game.
     Returns True or False
     """        
     def checkExit(self, user_input) -> bool:
+        if type(user_input) != str:
+            return False
+            
         user_input = user_input.lower()
         for exit in ("q", "quit", "exit", "stop"):
             if(user_input == exit):
