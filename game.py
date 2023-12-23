@@ -6,6 +6,7 @@ from board import *
 from util import *
 from piece import *
 from computer import *
+from GUI import *
 
 """
 Defines a game of chess. 
@@ -30,70 +31,64 @@ class Game:
         self.turn = COLORS[0] # white has first move 
             
     def startGame(self):
+        gui = GUI()
         while(1):
-            self.turn = COLORS[0]
-            self.board.displayBoard()
-            
-            user_input = input("Your move...\n>")
-            # make sure user input is valid and convert to proper form if necessary
-            # exit the program if the user entered ex. "quit"
-            Game.checkExit(user_input)
-            
-            user_move = Move(user_input)
-            
-            if(user_move.move == None):
-                print("Invalid move...")
-                continue 
-            
-            # find the piece associated with the players move 
-            square = self.findSquare(user_move)
-            if(square == None):
-                print("Piece not found...")
-                continue
-            print(f"Piece found at: {square.label}")
-            
-            # check those potential moves as being blocked, puts the player in checkmate
+            gui.displayMenu()
+        
+            while(1):
+                self.turn = COLORS[0]
+                gui.displayBoard(self.board.getBoard(), self.turn)
+                
+                user_input = input("Your move...\n>")
+                # make sure user input is valid and convert to proper form if necessary
+                # exit the program if the user entered ex. "quit"
+                if(gui.checkExit(user_input)):
+                    break # go back to display menu loop
+                
+                user_move = Move(user_input)
+                
+                if(user_move.move == None):
+                    print("Invalid move...")
+                    continue 
+                
+                # find the piece associated with the players move 
+                square = self.findSquare(user_move)
+                if(square == None):
+                    print("Piece not found...")
+                    continue
+                print(f"Piece found at: {square.label}")
+                
+                # check those potential moves as being blocked, puts the player in checkmate
 
-            legal_moves = self.get_legal_moves(square.piece)
-            print(legal_moves)
-            
-            # check that the players choice is in legal_moves
-            valid = False
-            for move in legal_moves:
-                if(move.move == user_move.move):
-                    valid = True
-                    break
-            if(not valid):
-                print(f"{user_move} is an invalid move...")
-                continue
-            
-            
-            # move the player's piece to the designated square
-            self.movePiece(square.label, user_move.getLabel())
-            
-            # change the turn to black
-            self.turn = COLORS[1]
-            
-            # determine the computers move
-            computerMove = Computer.computerMove(self)
-            
-            # find the square associated with that move 
-            computer_input = self.findSquare(computerMove)
-            
-            self.movePiece(computer_input.label, computerMove.getLabel())
-            print(f"Computer: {computerMove}")
+                legal_moves = self.get_legal_moves(square.piece)
+                print(legal_moves)
+                
+                # check that the players choice is in legal_moves
+                valid = False
+                for move in legal_moves:
+                    if(move.move == user_move.move):
+                        valid = True
+                        break
+                if(not valid):
+                    print(f"{user_move} is an invalid move...")
+                    continue
+                
+                
+                # move the player's piece to the designated square
+                self.movePiece(square.label, user_move.getLabel())
+                
+                # change the turn to black
+                self.turn = COLORS[1]
+                
+                # determine the computers move
+                computerMove = Computer.computerMove(self)
+                
+                # find the square associated with that move 
+                computer_input = self.findSquare(computerMove)
+                
+                self.movePiece(computer_input.label, computerMove.getLabel())
+                print(f"Computer: {computerMove}")
     
-    
-    
-    """
-    Checks if the user has entered input that indicates they want to
-    gracefully exit the program.
-    """        
-    def checkExit(user_input):
-        user_input = user_input.lower()
-        for exit in ("q", "quit", "exit"):
-            if(user_input == exit):
-                sys.exit()
                 
     def get_legal_moves(self, piece):
         pieceType = type(piece)
