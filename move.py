@@ -186,9 +186,12 @@ class Move:
                 return True
         return False
     
+      
+    
     def __init__(self, move: str):
         self.move = self.parseUserInput(move)
-        self.label = self.getLabel()
+        self.toSquare = self.getLabel()
+        
         
     def __eq__(self, other):
         if(self.move == other.move):

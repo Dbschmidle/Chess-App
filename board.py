@@ -60,12 +60,47 @@ class Board:
         
         return self.board[index[0]][index[1]]
     
+    """
+    Finds a square given a piece abbreviation and a color.
+    Ex. 'K'
+    """
+    def findSquare(self, pieceAbb, color):
+        if pieceAbb not in PIECE_ABB:
+            print("DEBUG: piece abbreviation not correct")
+            return None
+        
+        for row in self.board:
+            for square in row:
+                if(square.hasPiece()):
+                    if(square.piece.color == color):
+                        if(str(square.piece) == pieceAbb):
+                            return square
+                        
+        print("DEBUG: could not find piece")
+        
+    
+    
+    """
+    Returns a deep copy of the current game board
+    """
+    def copy(self):
+        new_board = []
+        
+        for row in self.board:
+            new_row = []
+            for square in row:
+                new_row.append(square.copy())
+            new_board.append(new_row)
+            
+        return new_board
+            
+    
     
 class Square:
     def __init__(self, label, color, piece=None):
         self.label = label 
-        self.piece = piece
         self.color = color
+        self.piece = piece
         
     def __str__(self):
         if self.piece == None:
@@ -91,3 +126,6 @@ class Square:
         if(self.piece == None):
             return False
         return True
+    
+    def copy(self):
+        return Square(self.label, self.color, self.piece)

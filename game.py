@@ -24,11 +24,12 @@ The game also determines:
 
 """
 class Game:
-    def __init__(self, player, computer):
-        self.board = Board()
+    def __init__(self, player, computer, board=Board()):
+        self.board = board
         self.player = player
         self.computer = computer
-        self.turn = COLORS[0] # white has first move 
+        self.turn = COLORS[0] # white has first move
+        self.inCheck = False
             
     def startGame(self):
         gui = GUI()
@@ -52,15 +53,16 @@ class Game:
                     continue 
                 
                 # find the piece associated with the players move 
-                square = self.findSquare(user_move)
+                square = self.findFromSquare(user_move)
                 if(square == None):
                     print("Piece not found...")
                     continue
                 print(f"Piece found at: {square.label}")
+                print(square.piece)
                 
                 # check those potential moves as being blocked, puts the player in checkmate
 
-                legal_moves = self.get_legal_moves(square.piece)
+                legal_moves = self.getLegalMoves(square.piece)
                 print(legal_moves)
                 
                 # check that the players choice is in legal_moves
@@ -82,34 +84,32 @@ class Game:
                 
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
-                
+                print(f"Computer: {computerMove}")
                 # find the square associated with that move 
-                computer_input = self.findSquare(computerMove)
+                computer_input = self.findFromSquare(computerMove)
                 
                 self.movePiece(computer_input.label, computerMove.getLabel())
-                print(f"Computer: {computerMove}")
     
-                
-    def get_legal_moves(self, piece):
+    """
+    Gets all the legal moves in this game given a piece on the board.
+    Returns a list of moves in the format: 'Qb4', 'Pxd5', etc.
+    """    
+    def getLegalMoves(self, piece):
         pieceType = type(piece)
         if pieceType == Pawn:
-            return self.pawn_legal_moves(piece)
+            return self.pawnLegalMoves(piece)
         elif pieceType == Knight:
-            return self.knight_legal_moves(piece)
+            return self.knightLegalMoves(piece)
         elif pieceType == Bishop:
-            return self.bishop_legal_moves(piece)  
+            return self.bishopLegalMoves(piece)  
         elif pieceType == Rook:
-            return self.rook_legal_moves(piece)
+            return self.rookLegalMoves(piece)
         elif pieceType == Queen:
-            return self.queen_legal_moves(piece)
+            return self.queenLegalMoves(piece)
         else:
-            return self.king_legal_moves(piece)      
+            return self.kingLegalMoves(piece)      
         
-    """
-    Gets all the legal moves of a pawn defined by piece.
-    Returns a list of moves that the piece can take.
-    """
-    def pawn_legal_moves(self, piece):
+    def pawnLegalMoves(self, piece):
         valid_moves = []
         currentPosition = toIndexes(piece.currentSquare) # returns tuple of indexes
 
@@ -154,7 +154,7 @@ class Game:
                         
         return valid_moves            
             
-    def knight_legal_moves(self, piece):
+    def knightLegalMoves(self, piece):
         # get the board indexes of the horse 
         currentPosition = toIndexes(piece.currentSquare)
         valid_moves = []
@@ -188,7 +188,7 @@ class Game:
                 
         return valid_moves
         
-    def bishop_legal_moves(self, piece):
+    def bishopLegalMoves(self, piece):
         currentPosition = toIndexes(piece.currentSquare)
         valid_moves = []
         values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
@@ -220,7 +220,7 @@ class Game:
                 
         return valid_moves
 
-    def rook_legal_moves(self, piece):
+    def rookLegalMoves(self, piece):
         currentPosition = toIndexes(piece.currentSquare)
         valid_moves = []
         
@@ -278,12 +278,12 @@ class Game:
                 
         return valid_moves       
         
-    def queen_legal_moves(self, piece):
-        valid_moves = self.bishop_legal_moves(piece)
-        valid_moves.extend(self.rook_legal_moves(piece))
+    def queenLegalMoves(self, piece):
+        valid_moves = self.bishopLegalMoves(piece)
+        valid_moves.extend(self.rookLegalMoves(piece))
         return valid_moves
 
-    def king_legal_moves(self, piece):
+    def kingLegalMoves(self, piece):
         currentPosition = toIndexes(piece.currentSquare)
         valid_moves = []
         
@@ -298,19 +298,20 @@ class Game:
             if(not withinBoard(newPosition[0], newPosition[1])):
                 continue
             
-            newLabel = Move.toLabels(newPosition)
+            toLabel = Move.toLabels(newPosition)
             
             # check for blocking piece 
-            newPositionPieceColor = self.hasPiece(newLabel)
+            newPositionPieceColor = self.hasPiece(toLabel)
             if(newPositionPieceColor == None):
-                # No blocking piece, make sure this move doesn't cause the king to be captured
-                if(not self.can_be_captured(newLabel, getOpponentColor(self.turn))):
-                    valid_moves.append(Move("K"+newLabel))
+                # No blocking piece
+                valid_moves.append(Move("K"+toLabel))
+                    
             
             elif(newPositionPieceColor != self.turn):
                 # Blocked by opponent piece
-                if(not self.can_be_captured(newLabel, getOpponentColor(self.turn))):
-                    valid_moves.append(Move("Kx"+newLabel))
+                valid_moves.append(Move("Kx"+toLabel))
+                
+
                     
         return valid_moves
                 
@@ -318,14 +319,14 @@ class Game:
     Determines if a given square specified by "label" has a piece.
     If a piece exists, returns the color of the piece.
     """
-    def hasPiece(self, label:str) -> bool:
+    def hasPiece(self, label:str):
         if(self.board.getSquare(label).hasPiece()):
             return self.board.getSquare(label).piece.color
         return None
         
     """ 
     Gets all of the possible moves for Black or White.
-    Returns a 1d array of all the possible moves in label format ex. 'Bd4', 'Pe5', etc.
+    Returns a 1d array of all the possible moves in label format ex. 'Bd4', 'Pxe5', etc.
     """  
     def getAllMoves(self, color):
         board = self.board.getBoard()
@@ -335,28 +336,27 @@ class Game:
             for square in row:
                 if(square.piece != None):
                     if(square.piece.color == color):
-                        piece_legal_moves = self.get_legal_moves(square.piece)
+                        piece_legal_moves = self.getLegalMoves(square.piece)
                         if(len(piece_legal_moves) == 0):
                             continue
                         allMoves.extend(piece_legal_moves)
                         
         return allMoves
         
-        
+     
     """
-    Given a move find the current piece on the board 
-    Returns the square that the piece is on
+    Given a move find the current piece on the board associated with that move.
+    Returns the square that the piece is on.
     """ 
-    def findSquare(self, move):        
+    def findFromSquare(self, move):        
         # find the square that the piece is on
-        board = self.board.getBoard()
-        for row in board:
+        for row in self.board.board:
             for square in row:
                 if(str(square.piece) == move.move[0]):
                     if(square.piece.color == self.turn):
                         # found a potential piece 
                         # check the possible moves 
-                        potential_moves = self.get_legal_moves(square.piece)
+                        potential_moves = self.getLegalMoves(square.piece)
                         print(f"Potential Moves for {square.piece}{square.label}: ", end='')
                         print(potential_moves)
                         if(move in potential_moves):
@@ -368,10 +368,9 @@ class Game:
                                 else:
                                     continue
                             # no duplicates (hopefully)
-                            return square
-
-        # Moves a piece from square 1 to square 2, assumes this move is completely valid
-    
+                            return square       
+ 
+        
     """
     Moves a piece from 'fromLabel' to the 'toLabel'.
     Assumes this move is completely valid.
@@ -410,17 +409,54 @@ class Game:
     
     
     
+    def causesCheck(self):
+        return
+    
     """
-    Determines if a piece (defined by label) can be captured by the opponent.
+    Determines if a piece can be captured by the opponent.
     Returns True if it can, False otherwise.
     Particularly useful for determining valid moves.
     """
-    def can_be_captured(self, label, opponentColor) -> bool:
-        # get all the possible moves of the opponent
-        # returns a list of all moves in label format: ex. 'Qg4'
-        return False
-            
+    def kingCanBeCaptured(self) -> bool:
+        # get all opponent moves
+        opponentColor = getOpponentColor(self.turn)
+        opponentMoves = self.getAllMoves(opponentColor)
+
+        # get current king square
+        king_square = self.board.findPiece("K", self.turn)
         
+        # compare toSquare of all the moves to the square of the king
+        
+        for move in opponentMoves:
+            if move.toSquare == king_square.label():
+                return True
+        
+        return False        
+        
+        
+        
+    def copy(self):
+        new_game = Game(self.player, self.computer, self.board.copy())
+        return new_game
+
+
+
+class MoveGenerator:
+    
+    """
+    Generates pseudo moves for black or white. Pseudo moves do NOT check for:
+        - Black/White being in Check
+        - Move causing the king to be captured by the opponent
+        - Pawn promotions
+    """
+    def generatePseudoMoves():
+        return 
+    
+
+
+    def generateLegalMoves():
+        return
+
                      
         
 class Player:
