@@ -5,7 +5,6 @@ from move import *
 from board import *
 from util import *
 from piece import *
-from computer import *
 from GUI import *
 
 """
@@ -55,23 +54,18 @@ class Game:
                 # find the piece associated with the players move 
                 square = self.findFromSquare(user_move)
                 if(square == None):
-                    print("Piece not found...")
+                    print("DEBUG: Piece not found...")
                     continue
-                print(f"Piece found at: {square.label}")
-                print(square.piece)
+                print(f"\tDEBUG: Piece {square.piece} found at: {square.label}")
                 
-                # check those potential moves as being blocked, puts the player in checkmate
-
-                legal_moves = self.getLegalMoves(square.piece)
+                # generate all the legal moves for the player
+                generator = MoveGenerator(self)
+                legal_moves = generator.generateLegalMoves(user_move)
+                print(f"Legal Moves for {self.turn}: ", end="")
                 print(legal_moves)
                 
                 # check that the players choice is in legal_moves
-                valid = False
-                for move in legal_moves:
-                    if(move.move == user_move.move):
-                        valid = True
-                        break
-                if(not valid):
+                if(user_move.move not in legal_moves):
                     print(f"{user_move} is an invalid move...")
                     continue
                 
@@ -79,8 +73,8 @@ class Game:
                 # move the player's piece to the designated square
                 self.movePiece(square.label, user_move.getLabel())
                 
-                # change the turn to black
-                self.turn = COLORS[1]
+                # change the turn to the opposite color
+                self.turn = getOpponentColor(self.turn)
                 
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
@@ -357,8 +351,10 @@ class Game:
                         # found a potential piece 
                         # check the possible moves 
                         potential_moves = self.getLegalMoves(square.piece)
-                        print(f"Potential Moves for {square.piece}{square.label}: ", end='')
+                        
+                        print(f"DEBUG: Potential Moves for {square.piece}{square.label}: ", end='')
                         print(potential_moves)
+                        
                         if(move in potential_moves):
                             # found, check for duplicates
                             if move.hasAmbiguitySymbol():
@@ -426,7 +422,6 @@ class Game:
         king_square = self.board.findPiece("K", self.turn)
         
         # compare toSquare of all the moves to the square of the king
-        
         for move in opponentMoves:
             if move.toSquare == king_square.label():
                 return True
@@ -435,6 +430,18 @@ class Game:
         
         
         
+    """
+    Checks the user's move to make sure it is legal
+    """
+    def checkUserMove(self, move, legal_moves):
+        if move not in legal_moves:
+            return False
+        return True
+        
+        
+    """
+    Creates a deep copy of the current game.
+    """
     def copy(self):
         new_game = Game(self.player, self.computer, self.board.copy())
         return new_game
@@ -449,13 +456,25 @@ class MoveGenerator:
         - Move causing the king to be captured by the opponent
         - Pawn promotions
     """
-    def generatePseudoMoves():
-        return 
+    def __init__(self, game):
+        self.game = game
     
-
-
-    def generateLegalMoves():
-        return
+    
+    def generatePseudoMoves(self):
+        return self.game.getAllMoves(self.game.turn)
+    
+    def generateLegalMoves(self, move):
+        # get the pseudo moves 
+        pseudo_moves = self.generatePseudoMoves()
+        
+        
+        
+        
+        return pseudo_moves
+        
+        
+        
+        
 
                      
         
@@ -467,3 +486,38 @@ class Player:
 
 
 
+class Computer:
+    
+    def __init__(self, difficulty=1, color="Black"):
+        """
+        1) Easy - random moves by computers
+        (others) define later
+        """
+        self.difficulty = difficulty
+        self.color = color 
+    
+    
+    """
+    Find a random move for the computer to play
+    Returns a tuple of the coordinates that the computer wants to go
+    """
+    def computerMove(game):
+        
+        while(1):
+            # Get all the possible moves
+            generator = MoveGenerator(game)
+            # generate the pseudo moves
+            computerPseudoMoves = generator.generatePseudoMoves()
+            # have the computer make a choice of those moves
+            computerMove = random.choice()
+
+            # generate the legal moves with that choice
+            # repeat if invalid
+            computerLegalMoves = generator.generateLegalMoves(computerMove)
+            
+            if computerMove in computerLegalMoves:
+                print(f"All moves for {game.turn}: ",end="")
+                print(computerLegalMoves)
+                break
+        
+        return computerMove
