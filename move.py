@@ -187,10 +187,16 @@ class Move:
         return False
     
       
-    
-    def __init__(self, move: str):
+    """
+    Initalize the variables of a move.
+        - Move: The chess notation of the move as a string. Ex. 'Nc3'
+        - toSquare: The label of the square that the piece wants to go to. Ex. 'Nc3' -> 'c3'
+        - fromSquare: The label of the square that the piece is currently on. Ex. 'Nc3' -> 'b1'
+    """
+    def __init__(self, move: str, toSquare=None, fromSquare=None):
         self.move = self.parseUserInput(move)
-        self.toSquare = self.getLabel()
+        self.toSquare = self.getLabel() if toSquare == None else toSquare
+        self.fromSquare = fromSquare
         
         
     def __eq__(self, other):

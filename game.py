@@ -114,14 +114,14 @@ class Game:
                 
                 # only count if there is no piece blocking
                 if(not self.hasPiece(newLabel)):
-                    valid_moves.append( Move("P"+newLabel) )
+                    valid_moves.append( Move("P"+newLabel, newLabel, piece.currentSquare) )
                 
             else:
                 # pawns can move 2 squares on their first turn 
                 newLabel = Move.toLabels((currentPosition[0] - 2, currentPosition[1]))
                 
                 if(not self.hasPiece(newLabel)):
-                    valid_moves.append( Move("P"+newLabel) )
+                    valid_moves.append( Move("P"+newLabel, newLabel, piece.currentSquare) )
 
         
         rowChange = 1 if self.turn == COLORS[1] else -1
@@ -132,7 +132,7 @@ class Game:
         if withinBoard(newPosition[0], newPosition[1]):
             newLabel = Move.toLabels(newPosition)
             if not self.hasPiece(newLabel):
-                valid_moves.append(Move("P"+newLabel))
+                valid_moves.append(Move("P"+newLabel, newLabel, piece.currentSquare))
         
         # check for diagonal opponent pieces on the left and right side
         for value in (-1, 1):
@@ -143,7 +143,7 @@ class Game:
                 if diagonal_piece_color != None:                    
                     if diagonal_piece_color != self.turn:
                         # there is an opponent piece at the left diagonal
-                        valid_moves.append(Move("Px"+newLabel))
+                        valid_moves.append(Move("Px"+newLabel, newLabel, piece.currentSquare))
                         
                         
         return valid_moves            
@@ -168,7 +168,7 @@ class Game:
                 potential_position_piece_color = self.hasPiece(newLabel)
                 if(potential_position_piece_color == None):
                     # Blank space, append to valid moves
-                    valid_moves.append(Move("N"+newLabel))
+                    valid_moves.append(Move("N"+newLabel, newLabel, piece.currentSquare))
                     continue
                     
                 if(potential_position_piece_color == self.turn):
@@ -177,7 +177,7 @@ class Game:
                 
                 if(potential_position_piece_color != self.turn):
                     # square is occupied by an opponent piece 
-                    valid_moves.append(Move("Nx"+newLabel))
+                    valid_moves.append(Move("Nx"+newLabel, newLabel, piece.currentSquare))
                 
                 
         return valid_moves
@@ -206,11 +206,11 @@ class Game:
                         break
                     else:
                         # opponent color case
-                        valid_moves.append(Move(str(piece)+"x"+newLabel))
+                        valid_moves.append(Move(str(piece)+"x"+newLabel, newLabel, piece.currentSquare))
                         break
                 
                 # there is nothing in the path of the bishop, append to the possible moves list 
-                valid_moves.append(Move(str(piece)+newLabel))
+                valid_moves.append(Move(str(piece)+newLabel, newLabel, piece.currentSquare))
                 
         return valid_moves
 
@@ -233,7 +233,7 @@ class Game:
                 newPositionPieceColor = self.hasPiece(newLabel)
                 if(newPositionPieceColor == None):
                     # nothing blocking piece
-                    valid_moves.append(Move(str(piece)+newLabel))
+                    valid_moves.append(Move(str(piece)+newLabel, newLabel, piece.currentSquare))
                     continue
                 
                 if(newPositionPieceColor == self.turn):
@@ -242,7 +242,7 @@ class Game:
                 
                 if(newPositionPieceColor != self.turn):
                     # blocked by opponent color piece
-                    valid_moves.append(Move(str(piece)+"x"+newLabel))
+                    valid_moves.append(Move(str(piece)+"x"+newLabel, newLabel, piece.currentSquare))
                     break
                 
         # vertical movement 
@@ -258,7 +258,7 @@ class Game:
                 newPositionPieceColor = self.hasPiece(newLabel)
                 if(newPositionPieceColor == None):
                     # nothing blocking piece
-                    valid_moves.append(Move(str(piece)+newLabel))
+                    valid_moves.append(Move(str(piece)+newLabel, newLabel, piece.currentSquare))
                     continue
                 
                 if(newPositionPieceColor == self.turn):
@@ -267,7 +267,7 @@ class Game:
                 
                 if(newPositionPieceColor != self.turn):
                     # blocked by opponent color piece
-                    valid_moves.append(Move(str(piece)+"x"+newLabel))
+                    valid_moves.append(Move(str(piece)+"x"+newLabel, newLabel, piece.currentSquare))
                     break
                 
         return valid_moves       
@@ -292,18 +292,18 @@ class Game:
             if(not withinBoard(newPosition[0], newPosition[1])):
                 continue
             
-            toLabel = Move.toLabels(newPosition)
+            newLabel = Move.toLabels(newPosition)
             
             # check for blocking piece 
-            newPositionPieceColor = self.hasPiece(toLabel)
+            newPositionPieceColor = self.hasPiece(newLabel)
             if(newPositionPieceColor == None):
                 # No blocking piece
-                valid_moves.append(Move("K"+toLabel))
+                valid_moves.append(Move("K"+newLabel, newLabel, piece.currentSquare))
                     
             
             elif(newPositionPieceColor != self.turn):
                 # Blocked by opponent piece
-                valid_moves.append(Move("Kx"+toLabel))
+                valid_moves.append(Move("Kx"+newLabel, newLabel, piece.currentSquare))
                 
 
                     
@@ -450,22 +450,25 @@ class Game:
 
 class MoveGenerator:
     
+
+    def __init__(self, game):
+        self.game = game
+    
     """
     Generates pseudo moves for black or white. Pseudo moves do NOT check for:
         - Black/White being in Check
         - Move causing the king to be captured by the opponent
         - Pawn promotions
-    """
-    def __init__(self, game):
-        self.game = game
-    
-    
+    """    
     def generatePseudoMoves(self):
         return self.game.getAllMoves(self.game.turn)
     
     def generateLegalMoves(self, move):
         # get the pseudo moves 
         pseudo_moves = self.generatePseudoMoves()
+        # temp_game = self.game.copy()
+        # for move in pseudo_moves:
+        #     temp_game.movePiece()
         
         
         
@@ -473,17 +476,13 @@ class MoveGenerator:
         return pseudo_moves
         
         
-        
-        
-
-                     
+                 
         
 class Player:
     def __init__(self, name, color=COLORS[0]):
         self.name = name
         self.color = color
         self.pieces = None
-
 
 
 class Computer:
@@ -509,7 +508,7 @@ class Computer:
             # generate the pseudo moves
             computerPseudoMoves = generator.generatePseudoMoves()
             # have the computer make a choice of those moves
-            computerMove = random.choice()
+            computerMove = random.choice(computerPseudoMoves)
 
             # generate the legal moves with that choice
             # repeat if invalid
