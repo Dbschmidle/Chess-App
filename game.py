@@ -23,11 +23,11 @@ The game also determines:
 
 """
 class Game:
-    def __init__(self, player, computer, board=Board()):
+    def __init__(self, player, computer, board=Board(), turn=COLORS[0]):
         self.board = board
         self.player = player
         self.computer = computer
-        self.turn = COLORS[0] # white has first move
+        self.turn = turn # white has first move by default
         self.inCheck = False
             
     def startGame(self):
@@ -53,10 +53,11 @@ class Game:
                 
                 # find the piece associated with the players move 
                 square = self.findFromSquare(user_move)
+                user_move.fromSquare = square.label
                 if(square == None):
                     print("DEBUG: Piece not found...")
                     continue
-                print(f"\tDEBUG: Piece {square.piece} found at: {square.label}")
+                print(f"DEBUG: Piece {square.piece} found at: {square.label}")
                 
                 # generate all the legal moves for the player
                 generator = MoveGenerator(self)
@@ -78,11 +79,11 @@ class Game:
                 
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
-                print(f"Computer: {computerMove}")
+                print(f"Computer: {computerMove}{computerMove.fromSquare}")
                 # find the square associated with that move 
                 computer_input = self.findFromSquare(computerMove)
                 
-                self.movePiece(computer_input.label, computerMove.getLabel())
+                self.movePiece(computerMove.fromSquare, computerMove.toSquare)
     
     """
     Gets all the legal moves in this game given a piece on the board.
@@ -415,35 +416,25 @@ class Game:
     """
     def kingCanBeCaptured(self) -> bool:
         # get all opponent moves
-        opponentColor = getOpponentColor(self.turn)
-        opponentMoves = self.getAllMoves(opponentColor)
+        opponentMoves = self.getAllMoves(self.turn)
 
-        # get current king square
-        king_square = self.board.findPiece("K", self.turn)
-        
+        # get opposite color king square
+        king_square = self.board.findSquare("K", getOpponentColor(self.turn))
+        print(f"\t\tDEBUG: Opponent King Square: {king_square.label}")
         # compare toSquare of all the moves to the square of the king
         for move in opponentMoves:
-            if move.toSquare == king_square.label():
+            if move.toSquare == king_square.label:
+                print(f"\t\tDEBUG: {self.turn} has a move {move} that can capture the king")
                 return True
         
         return False        
-        
-        
-        
-    """
-    Checks the user's move to make sure it is legal
-    """
-    def checkUserMove(self, move, legal_moves):
-        if move not in legal_moves:
-            return False
-        return True
-        
-        
+         
+          
     """
     Creates a deep copy of the current game.
     """
     def copy(self):
-        new_game = Game(self.player, self.computer, self.board.copy())
+        new_game = Game(self.player, self.computer, self.board.copy(), self.turn)
         return new_game
 
 
@@ -466,10 +457,16 @@ class MoveGenerator:
     def generateLegalMoves(self, move):
         # get the pseudo moves 
         pseudo_moves = self.generatePseudoMoves()
-        # temp_game = self.game.copy()
-        # for move in pseudo_moves:
-        #     temp_game.movePiece()
         
+        # create a copy of the game
+        temp_game = self.game.copy()
+        
+        # play the user move in that game
+        temp_game.movePiece(move.fromSquare, move.toSquare)
+        temp_game.turn = getOpponentColor(temp_game.turn)
+        
+        if temp_game.kingCanBeCaptured():
+            pseudo_moves.remove(move)
         
         
         

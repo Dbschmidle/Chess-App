@@ -10,7 +10,11 @@ The board class defines the physical board that is used for the game of chess.
 """
 class Board:
     # initalizes the board full of squares 
-    def __init__(self):
+    def __init__(self, board=None):
+        if board != None:
+            self.board = board
+            return
+        
         self.board = []
 
         
@@ -92,7 +96,9 @@ class Board:
                 new_row.append(square.copy())
             new_board.append(new_row)
             
-        return new_board
+        board_copy = Board(new_board)    
+            
+        return board_copy
             
     
     
