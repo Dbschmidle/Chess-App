@@ -15,7 +15,12 @@ class Piece:
     def setCurrentSquare(self, label):
         self.currentSquare = label    
         
- 
+    def copy(self):
+        types = (Pawn, Knight, Bishop, Rook, Queen, King)
+        for t in types:
+            if type(self) == t:
+                return t(self.name, self.color, self.currentSquare)
+            
     def __str__(self):
         return self.name
        

@@ -1,4 +1,4 @@
-from constants import *
+from util import *
 """
 A move is defined as a piece abbreviation ex. 'Q', 'R', (also 'P' for pawn in this game), 
 followed by a 'label' ex. 'e4', 'g5' that defines the square that the piece wants to go to.

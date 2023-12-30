@@ -28,7 +28,6 @@ class Game:
         self.player = player
         self.computer = computer
         self.turn = turn # white has first move by default
-        self.inCheck = False
             
     def startGame(self):
         gui = GUI()
@@ -53,11 +52,14 @@ class Game:
                 
                 # find the piece associated with the players move 
                 square = self.findFromSquare(user_move)
-                user_move.fromSquare = square.label
                 if(square == None):
-                    print("DEBUG: Piece not found...")
+                    print("Piece not found...")
                     continue
                 print(f"DEBUG: Piece {square.piece} found at: {square.label}")
+                
+                # set the moves fromSquare
+                user_move.fromSquare = square.label
+                
                 
                 # generate all the legal moves for the player
                 generator = MoveGenerator(self)
@@ -75,7 +77,7 @@ class Game:
                 self.movePiece(square.label, user_move.getLabel())
                 
                 # change the turn to the opposite color
-                self.turn = getOpponentColor(self.turn)
+                self.turn = Util.getOpponentColor(self.turn)
                 
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
@@ -106,7 +108,7 @@ class Game:
         
     def pawnLegalMoves(self, piece):
         valid_moves = []
-        currentPosition = toIndexes(piece.currentSquare) # returns tuple of indexes
+        currentPosition = Util.toIndexes(piece.currentSquare) # returns tuple of indexes
 
         if(piece.hasMoved == False):
             if(piece.color == COLORS[1]):
@@ -130,7 +132,7 @@ class Game:
         newPosition = (currentPosition[0] + rowChange, currentPosition[1])
         
         # check immediately in front of the pawn black or white
-        if withinBoard(newPosition[0], newPosition[1]):
+        if Util.withinBoard(newPosition[0], newPosition[1]):
             newLabel = Move.toLabels(newPosition)
             if not self.hasPiece(newLabel):
                 valid_moves.append(Move("P"+newLabel, newLabel, piece.currentSquare))
@@ -138,7 +140,7 @@ class Game:
         # check for diagonal opponent pieces on the left and right side
         for value in (-1, 1):
             newPosition = (currentPosition[0] + rowChange, currentPosition[1] + value)
-            if withinBoard(newPosition[0], newPosition[1]):
+            if Util.withinBoard(newPosition[0], newPosition[1]):
                 newLabel = Move.toLabels(newPosition)
                 diagonal_piece_color = self.hasPiece(newLabel)
                 if diagonal_piece_color != None:                    
@@ -151,7 +153,7 @@ class Game:
             
     def knightLegalMoves(self, piece):
         # get the board indexes of the horse 
-        currentPosition = toIndexes(piece.currentSquare)
+        currentPosition = Util.toIndexes(piece.currentSquare)
         valid_moves = []
         
         # the horse has 8 possible moves, some of which can be outside the range of the board
@@ -161,7 +163,7 @@ class Game:
             newPosition = (currentPosition[0]+value[0], currentPosition[1]+value[1])
             
             # only add this new position to the potential moves if it is within the board coordinate system
-            if(withinBoard(newPosition[0], newPosition[1])):
+            if(Util.withinBoard(newPosition[0], newPosition[1])):
                 
                 newLabel = Move.toLabels(newPosition)
                 
@@ -184,7 +186,7 @@ class Game:
         return valid_moves
         
     def bishopLegalMoves(self, piece):
-        currentPosition = toIndexes(piece.currentSquare)
+        currentPosition = Util.toIndexes(piece.currentSquare)
         valid_moves = []
         values = ((-1, 1), (1, 1), (1, -1), (-1, -1)) # multipliers for each direction
         for i in values:
@@ -192,7 +194,7 @@ class Game:
                 newPosition = (currentPosition[0]+(j*i[0]), currentPosition[1]+(j*i[1]))
                 
                 # break out of this loop if outside the board and go to next diagonal
-                if (not withinBoard(newPosition[0], newPosition[1])):
+                if (not Util.withinBoard(newPosition[0], newPosition[1])):
                     break
 
                 # if a piece blocks this diagonal, check if it belongs to white or black
@@ -216,7 +218,7 @@ class Game:
         return valid_moves
 
     def rookLegalMoves(self, piece):
-        currentPosition = toIndexes(piece.currentSquare)
+        currentPosition = Util.toIndexes(piece.currentSquare)
         valid_moves = []
         
         # horizontal/vertical movement
@@ -226,7 +228,7 @@ class Game:
                 newPosition = (currentPosition[0], currentPosition[1]+(i*j))
                 
                 # check if the new position is within the board
-                if(not withinBoard(newPosition[0], newPosition[1])):
+                if(not Util.withinBoard(newPosition[0], newPosition[1])):
                     break
                 
                 newLabel = Move.toLabels(newPosition)
@@ -253,7 +255,7 @@ class Game:
                 newPosition = (currentPosition[0]+(i*j), currentPosition[1])
                 newLabel = Move.toLabels(newPosition)
                 
-                if(not withinBoard(newPosition[0], newPosition[1])):
+                if(not Util.withinBoard(newPosition[0], newPosition[1])):
                     break
                 
                 newPositionPieceColor = self.hasPiece(newLabel)
@@ -279,7 +281,7 @@ class Game:
         return valid_moves
 
     def kingLegalMoves(self, piece):
-        currentPosition = toIndexes(piece.currentSquare)
+        currentPosition = Util.toIndexes(piece.currentSquare)
         valid_moves = []
         
         # define the directional movement, goes clockwise 
@@ -290,7 +292,7 @@ class Game:
             
         
             # skip if not in bounds
-            if(not withinBoard(newPosition[0], newPosition[1])):
+            if(not Util.withinBoard(newPosition[0], newPosition[1])):
                 continue
             
             newLabel = Move.toLabels(newPosition)
@@ -405,30 +407,57 @@ class Game:
         return 1
     
     
-    
-    def causesCheck(self):
-        return
+    """
+    Checks if the current game has put the player or computer in check.
+    """
+    def inCheckState(self):
+        opponentColor = Util.getOpponentColor(self.turn)
+        if self.canCaptureKing(opponentColor):
+            print(f"{self.turn} is in check!")
+            return True
+        return False
+        
+        
+        
+        
     
     """
-    Determines if a piece can be captured by the opponent.
+    Determines if the king can be captured by the color.
     Returns True if it can, False otherwise.
     Particularly useful for determining valid moves.
     """
-    def kingCanBeCaptured(self) -> bool:
+    def canCaptureKing(self, color) -> bool:
         # get all opponent moves
-        opponentMoves = self.getAllMoves(self.turn)
+        opponentMoves = self.getAllMoves(color)
 
         # get opposite color king square
-        king_square = self.board.findSquare("K", getOpponentColor(self.turn))
-        print(f"\t\tDEBUG: Opponent King Square: {king_square.label}")
+        king_square = self.board.findSquare("K", Util.getOpponentColor(color))
+        print(f"\t\tDEBUG: {Util.getOpponentColor(color)} King Square: {king_square.label}")
         # compare toSquare of all the moves to the square of the king
         for move in opponentMoves:
             if move.toSquare == king_square.label:
-                print(f"\t\tDEBUG: {self.turn} has a move {move} that can capture the king")
+                print(f"\t\tDEBUG: {color} has a move {move} that can capture the king")
                 return True
         
         return False        
          
+    
+    """
+    Determines if a move causes immediate checkmate.
+    Makes a copy of the current game with the move being played.
+    """
+    def causesCheckmate(self, move) -> bool:
+        # create a copy of the game
+        temp_game = self.copy()
+        
+        # play the user move in that game
+        temp_game.movePiece(move.fromSquare, move.toSquare)
+        temp_game.turn = Util.getOpponentColor(temp_game.turn)
+        
+        if temp_game.canCaptureKing(temp_game.turn):   
+            return True          
+        return False
+             
           
     """
     Creates a deep copy of the current game.
@@ -458,14 +487,8 @@ class MoveGenerator:
         # get the pseudo moves 
         pseudo_moves = self.generatePseudoMoves()
         
-        # create a copy of the game
-        temp_game = self.game.copy()
-        
-        # play the user move in that game
-        temp_game.movePiece(move.fromSquare, move.toSquare)
-        temp_game.turn = getOpponentColor(temp_game.turn)
-        
-        if temp_game.kingCanBeCaptured():
+        if self.game.causesCheckmate(move):
+            print(f"{move} would cause checkmate!")
             pseudo_moves.remove(move)
         
         
@@ -480,6 +503,7 @@ class Player:
         self.name = name
         self.color = color
         self.pieces = None
+        self.inCheck = False
 
 
 class Computer:
@@ -491,6 +515,7 @@ class Computer:
         """
         self.difficulty = difficulty
         self.color = color 
+        self.inCheck = False
     
     
     """

@@ -1,5 +1,4 @@
 from game import *
-from computer import *
 
 def main():
     newgame = Game(Player("David", "White"), Computer())

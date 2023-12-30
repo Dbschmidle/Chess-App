@@ -1,7 +1,7 @@
 from constants import *
 from piece import *
 from game import *
-from util import toIndexes
+
 
 """
 The board class defines the physical board that is used for the game of chess. 
@@ -53,6 +53,21 @@ class Board:
         self.board[7][4].addPiece(King(PIECE_NAMES[5], COLORS[0], self.board[7][4].getLabel()))
             
         
+    """
+    Creates an empty board with just squares.
+    """
+    def createEmptyBoard():
+        # initalize all the squares
+        board = []
+        for i in range(8):
+            currentRow = []
+            for j in range(8):
+                colorSelection = COLORS[0] if (i+j)%2 == 0 else COLORS[1]
+                currentRow.append(Square(label=LETTERS[j]+str(8-i), color=colorSelection))     
+            board.append(currentRow)
+            
+        return board
+    
             
     # returns the current board
     def getBoard(self):
@@ -60,9 +75,27 @@ class Board:
     
     # Return the square with the given label
     def getSquare(self, label):
-        index = toIndexes(label)
+        index = self.toIndexes(label)
         
         return self.board[index[0]][index[1]]
+    
+    
+    def toIndexes(self, label) -> (int, int):
+        if (len(label) != 2):
+            print("Board coordiantes out of range...")
+            return -1
+        label = label.lower()
+        col = -1
+        # get the col
+        for i, letter in enumerate(LETTERS):
+            if label[0] == letter:
+                col = i
+                
+        row = 8 - int(label[1]) 
+        
+        return (row, col)
+    
+    
     
     """
     Finds a square given a piece abbreviation and a color.
@@ -134,4 +167,5 @@ class Square:
         return True
     
     def copy(self):
-        return Square(self.label, self.color, self.piece)
+        piece_copy = self.piece.copy() if self.hasPiece() else None
+        return Square(self.label, self.color, piece_copy)
