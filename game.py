@@ -32,7 +32,11 @@ class Game:
     def startGame(self):
         gui = GUI()
         while(1):
-            gui.displayMenu()
+            
+            loadedBoard = gui.displayMenu()
+            if loadedBoard != None:
+                print("Game loaded!")
+                self.board = Board(loadedBoard)
         
             while(1):
                 self.turn = COLORS[0]
@@ -82,8 +86,6 @@ class Game:
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
                 print(f"Computer: {computerMove}{computerMove.fromSquare}")
-                # find the square associated with that move 
-                computer_input = self.findFromSquare(computerMove)
                 
                 self.movePiece(computerMove.fromSquare, computerMove.toSquare)
     

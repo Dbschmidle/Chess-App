@@ -1,4 +1,5 @@
-import sys
+import sys, os
+from util import *
 from constants import *
 from colorama import Fore, Back, Style, just_fix_windows_console
 
@@ -74,7 +75,7 @@ class GUI:
             
         while(1): 
             print(Fore.GREEN+"-"*24+"MENU"+"-"*24)
-            options = ("\t1) Start Game", "\t2) Change Theme", "\t3) Change Labels","\t4) Quit")
+            options = ("\t1) Start Game", "\t2) Load Game","\t3) Change Theme", "\t4) Change Labels","\t5) Quit")
             for option in options:
                 print(Fore.BLUE + option)
                     
@@ -98,15 +99,20 @@ class GUI:
                 break
             
             elif user_input == 2:
-                self.setTheme()
+                return self.setGame()
                 
             elif user_input == 3:
-                self.setLabels()
+                self.setTheme()
         
             elif user_input == 4:
+                self.setLabels()
+                
+            elif user_input == 5:
                 print(Fore.GREEN+"Goodbye...")
                 print(Style.RESET_ALL)
                 sys.exit()
+               
+               
                
     def setTheme(self):
         while(1):
@@ -150,7 +156,38 @@ class GUI:
                 self.showLabels = False
                 return
             print(Fore.RED+"Invalid input...")
-                  
+              
+              
+    def setGame(self):
+        while(1):
+            # get the files in the current directory
+            dir_files = os.listdir()
+            txt_files = []
+            # remove all that dont end in .txt
+            for file in dir_files:
+                if file.endswith(".txt"):
+                    txt_files.append(file)
+                    
+            print(Fore.GREEN+"LOAD GAME")
+            
+            for i, option in enumerate(txt_files):
+                print(Fore.BLUE+str(i+1)+") "+option)
+            
+            selection = input("\t>")
+            if self.checkExit(selection):
+                break
+                
+            try:
+                selection = int(selection)
+                selection = txt_files[selection-1]
+            except:
+                print(Fore.RED+"Invalid selection...")
+                continue
+            
+            loadedBoard = FileManager.loadFile(selection)
+            return loadedBoard
+
+            
     """
     Checks if the user has entered input that indicates they want to exit the game.
     Returns True or False

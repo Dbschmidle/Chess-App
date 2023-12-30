@@ -22,12 +22,12 @@ class FileManager:
             
             board = Board.createEmptyBoard()
             for line in lines:
-                line = line.upper.strip()
+                line = line.upper().strip()
                 if line[1] in PIECE_ABB:
                     # create the piece
                     piece_abb_index = PIECE_ABB.index(line[1])
                     piece_color = COLORS[0] if line[0] == 'W' else COLORS[1]
-                    new_piece = PIECE_TYPES[piece_abb_index](PIECE_NAMES[piece_abb_index], piece_color, line[2:4])
+                    new_piece = PIECE_TYPES[piece_abb_index](PIECE_NAMES[piece_abb_index], piece_color, line[2:4].lower())
                     
                     # put piece on board
                     piece_board_indexes = Util.toIndexes(line[2:4])
@@ -39,6 +39,8 @@ class FileManager:
                     
             return board
                     
+    
+        
         
         
 
