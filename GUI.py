@@ -99,7 +99,10 @@ class GUI:
                 break
             
             elif user_input == 2:
-                return self.setGame()
+                loadedBoard = self.setGame()
+                if loadedBoard == None:
+                    continue
+                return loadedBoard
                 
             elif user_input == 3:
                 self.setTheme()
@@ -111,9 +114,7 @@ class GUI:
                 print(Fore.GREEN+"Goodbye...")
                 print(Style.RESET_ALL)
                 sys.exit()
-               
-               
-               
+                       
     def setTheme(self):
         while(1):
             print(Fore.GREEN+"THEME CHANGE")
@@ -157,7 +158,10 @@ class GUI:
                 return
             print(Fore.RED+"Invalid input...")
               
-              
+    """
+    Prompts the user to select a game to load.
+    Returns the loaded board.
+    """  
     def setGame(self):
         while(1):
             # get the files in the current directory
@@ -187,7 +191,17 @@ class GUI:
             loadedBoard = FileManager.loadFile(selection)
             return loadedBoard
 
-            
+    """
+    Checks if the user tried to save the current gamestate.
+    """
+    def checkSaveGame(self, user_input):
+          user_input = user_input.lower()
+          options = ("save", "savegame")
+          if user_input in options:
+              return True
+          return False
+          
+                
     """
     Checks if the user has entered input that indicates they want to exit the game.
     Returns True or False

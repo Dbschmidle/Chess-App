@@ -4,10 +4,14 @@ from piece import *
 
 class FileManager:
     
+    unknown_filename_counter = 0
+    
     """
     Loads a file from this directory and returns the board.
+    The first line of the file should be whose turn it is.
     File should be in format <color><name of piece><square name> newline
     Ex.
+        - 'W'
         - 'WQb4'
         - 'BPh1'
         -  ...
@@ -21,6 +25,7 @@ class FileManager:
             lines = file.readlines()
             
             board = Board.createEmptyBoard()
+                
             for line in lines:
                 line = line.upper().strip()
                 if line[1] in PIECE_ABB:
@@ -40,7 +45,25 @@ class FileManager:
             return board
                     
     
-        
+    """
+    Saves a gamestate into a file into this directory.
+    The first line of the file will be whose turn it is.
+    """
+    def saveGame(game, filename="game"):
+        with open(filename+".txt", "w") as newfile:
+            newfile.write("W\n") if game.turn == COLORS[0] else newfile.write("B\n")
+                
+            for row in game.board.getBoard():
+                for square in row:
+                    if square.hasPiece():
+                        pieceColor = square.piece.color
+                        pieceName = str(square.piece)
+                        newfile.write(pieceColor[0]+pieceName+square.label+"\n")
+                            
+            
+                
+            
+            
         
         
 

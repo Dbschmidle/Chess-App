@@ -48,6 +48,12 @@ class Game:
                 if(gui.checkExit(user_input)):
                     break # go back to display menu loop
                 
+                # check if the user tried to save the current game
+                if gui.checkSaveGame(user_input):
+                    FileManager.saveGame(self, input("Save as: >"))
+                    print("Saved Game!")
+                    continue # go back to top
+                    
                 user_move = Move(user_input)
                 
                 if(user_move.move == None):
