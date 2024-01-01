@@ -60,34 +60,31 @@ class Game:
                     print("Invalid move...")
                     continue 
                 
-                # find the piece associated with the players move 
-                square = self.findFromSquare(user_move)
-                if(square == None):
-                    print("Piece not found...")
-                    continue
-                print(f"DEBUG: Piece {square.piece} found at: {square.label}")
-                
-                # set the moves fromSquare
-                user_move.fromSquare = square.label
-                
                 
                 # generate all the legal moves for the player
                 generator = MoveGenerator(self)
-                legal_moves = generator.generateLegalMoves(user_move)
+                legal_moves = generator.generateLegalMoves()
+                
+                # check if the game is over
                 if len(legal_moves) == 0:
                     print(f"Game Over: {Util.getOpponentColor(self.turn)} wins!")
                     break
-                #print(f"Legal Moves for {self.turn}: ", end="")
-                #print(legal_moves)
+                print(f"Legal Moves for {self.turn}: ", end="")
+                print(legal_moves)
                 
-                # check that the players choice is in legal_moves
-                if(user_move.move not in legal_moves):
-                    print(f"{user_move} is an invalid move...")
+                # check that the user move is in legal moves
+                if user_move not in legal_moves:
+                    print("Move not found...")
                     continue
+                
+                for move in legal_moves:
+                    if user_move == move:
+                        user_move = move
+                        break
                 
                 
                 # move the player's piece to the designated square
-                self.movePiece(square.label, user_move.getLabel())
+                self.movePiece(user_move.fromSquare, user_move.toSquare)
                 
                 # change the turn to the opposite color
                 self.turn = Util.getOpponentColor(self.turn)
@@ -445,7 +442,7 @@ class Game:
 
         # get opposite color king square
         king_square = self.board.findSquare("K", Util.getOpponentColor(color))
-        print(f"\t\tDEBUG: {Util.getOpponentColor(color)} King Square: {king_square.label}")
+        #print(f"\t\tDEBUG: {Util.getOpponentColor(color)} King Square: {king_square.label}")
         # compare toSquare of all the moves to the square of the king
         for move in opponentMoves:
             if move.toSquare == king_square.label:
@@ -496,17 +493,49 @@ class MoveGenerator:
     def generatePseudoMoves(self):
         return self.game.getAllMoves(self.game.turn)
     
-    def generateLegalMoves(self, move):
+    def generateLegalMoves(self):
         # get the pseudo moves 
         pseudo_moves = self.generatePseudoMoves()
         
-        if self.game.causesCheckmate(move):
-            print(f"{move} would cause checkmate!")
-            pseudo_moves.remove(move)
+        pseudo_moves = self.specifyDuplicates(pseudo_moves)
         
+        # remove all the moves that cause checkmate in 1 
+        for move in pseudo_moves:
+            if self.game.causesCheckmate(move):
+                print(f"{move} would cause checkmate!")
+                pseudo_moves.remove(move)
         
         
         return pseudo_moves
+    
+    """
+    Given a list of moves, finds any duplicates and adds ambiguity specifiers to the moves.
+    Returns a list of moves with duplicates specified.
+    """
+    def specifyDuplicates(self, listOfMoves) -> []:
+        newMoveList = []
+        while(len(listOfMoves) > 0):
+            currentMove = listOfMoves.pop()
+            
+            if currentMove in listOfMoves:
+                # duplicate exists, add an ambiguity symbol for both 
+                tmp = currentMove.move
+                currentMove.addAmbiguitySymbol()
+                newMoveList.append(currentMove)
+                # remove the duplicate
+                dupMove = listOfMoves.pop(listOfMoves.index(tmp))
+                dupMove.addAmbiguitySymbol()
+                newMoveList.append(dupMove)
+                continue
+            
+            
+            newMoveList.append(currentMove)
+            
+        return newMoveList
+                
+            
+                
+        
         
         
                  
@@ -537,25 +566,11 @@ class Computer:
     """
     def computerMove(game):
         
-        # Get all the possible moves
         generator = MoveGenerator(game)
-        # generate the pseudo moves
-        computerPseudoMoves = generator.generatePseudoMoves()
         
-        while(len(computerPseudoMoves) > 0):
-            # have the computer make a choice of those moves
-            computerMove = random.choice(computerPseudoMoves)
-
-            # generate the legal moves with that choice
-            # repeat if invalid
-            computerLegalMoves = generator.generateLegalMoves(computerMove)
-            
-            if computerMove in computerLegalMoves:
-                #print(f"All moves for {game.turn}: ",end="")
-                #print(computerLegalMoves)
-                return computerMove
+        legal_moves = generator.generateLegalMoves()
         
-            # remove that move from the pseudo moves list
-            computerPseudoMoves.remove(computerMove)
+        if len(legal_moves) == 0:
+            return None
         
-        return None
+        return random.choice(legal_moves)

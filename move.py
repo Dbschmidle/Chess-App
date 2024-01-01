@@ -138,6 +138,14 @@ class Move:
         return None
 
     """
+    Adds an ambiguity symbol to the move.
+    Ex. 'Re1' -> 'Rae1'
+    """
+    def addAmbiguitySymbol(self):
+        self.move = self.move[0] + self.fromSquare[0] + self.toSquare
+        
+
+    """
     Checks if the move contains a takes symbol.
     """
     def hasTakesSymbol(self) -> bool:
@@ -209,6 +217,9 @@ class Move:
     
     def __str__(self):
         return self.move
+    
+    def debugPrint(self):
+        return f"{self.fromSquare}{self.move}"
     
     def __repr__(self):
         return self.move

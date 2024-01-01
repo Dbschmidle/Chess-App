@@ -97,6 +97,10 @@ class Util:
         return oppColor
 
 
+    def debugPrintMoves(listOfMoves):
+        for move in listOfMoves:
+            print(move.debugPrint())
+
 
 
 def main():
