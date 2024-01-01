@@ -202,7 +202,10 @@ class Move:
     def __eq__(self, other):
         if(type(other) == str):
             return True if self.move == other else False
-        return True if self.move == other.move else False
+        if type(other) == Move:
+            return True if self.move == other.move else False
+    
+        return False
     
     def __str__(self):
         return self.move

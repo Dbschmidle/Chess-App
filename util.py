@@ -25,6 +25,10 @@ class FileManager:
             lines = file.readlines()
             
             board = Board.createEmptyBoard()
+            
+            ### assume white has turn for now
+            lines.pop(0)
+            ###
                 
             for line in lines:
                 line = line.upper().strip()
@@ -61,14 +65,6 @@ class FileManager:
                         newfile.write(pieceColor[0]+pieceName+square.label+"\n")
                             
             
-                
-            
-            
-        
-        
-
-
-
 class Util:
 
     # Converts board coordinates ex: "E4", "A8" to indexes on the board 

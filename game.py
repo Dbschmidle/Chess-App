@@ -74,8 +74,11 @@ class Game:
                 # generate all the legal moves for the player
                 generator = MoveGenerator(self)
                 legal_moves = generator.generateLegalMoves(user_move)
-                print(f"Legal Moves for {self.turn}: ", end="")
-                print(legal_moves)
+                if len(legal_moves) == 0:
+                    print(f"Game Over: {Util.getOpponentColor(self.turn)} wins!")
+                    break
+                #print(f"Legal Moves for {self.turn}: ", end="")
+                #print(legal_moves)
                 
                 # check that the players choice is in legal_moves
                 if(user_move.move not in legal_moves):
@@ -91,6 +94,10 @@ class Game:
                 
                 # determine the computers move
                 computerMove = Computer.computerMove(self)
+                if computerMove == None:
+                    print(f"Game Over: {Util.getOpponentColor(self.turn)} wins!")
+                    break
+                    
                 print(f"Computer: {computerMove}{computerMove.fromSquare}")
                 
                 self.movePiece(computerMove.fromSquare, computerMove.toSquare)
@@ -363,8 +370,8 @@ class Game:
                         # check the possible moves 
                         potential_moves = self.getLegalMoves(square.piece)
                         
-                        print(f"DEBUG: Potential Moves for {square.piece}{square.label}: ", end='')
-                        print(potential_moves)
+                        #print(f"DEBUG: Potential Moves for {square.piece}{square.label}: ", end='')
+                        #print(potential_moves)
                         
                         if(move in potential_moves):
                             # found, check for duplicates
@@ -424,8 +431,6 @@ class Game:
             print(f"{self.turn} is in check!")
             return True
         return False
-        
-        
         
         
     
@@ -527,16 +532,17 @@ class Computer:
     
     
     """
-    Find a random move for the computer to play
-    Returns a tuple of the coordinates that the computer wants to go
+    Find a random move for the computer to play. 
+    If there is no valid move this will return None.
     """
     def computerMove(game):
         
-        while(1):
-            # Get all the possible moves
-            generator = MoveGenerator(game)
-            # generate the pseudo moves
-            computerPseudoMoves = generator.generatePseudoMoves()
+        # Get all the possible moves
+        generator = MoveGenerator(game)
+        # generate the pseudo moves
+        computerPseudoMoves = generator.generatePseudoMoves()
+        
+        while(len(computerPseudoMoves) > 0):
             # have the computer make a choice of those moves
             computerMove = random.choice(computerPseudoMoves)
 
@@ -545,8 +551,11 @@ class Computer:
             computerLegalMoves = generator.generateLegalMoves(computerMove)
             
             if computerMove in computerLegalMoves:
-                print(f"All moves for {game.turn}: ",end="")
-                print(computerLegalMoves)
-                break
+                #print(f"All moves for {game.turn}: ",end="")
+                #print(computerLegalMoves)
+                return computerMove
         
-        return computerMove
+            # remove that move from the pseudo moves list
+            computerPseudoMoves.remove(computerMove)
+        
+        return None
