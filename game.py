@@ -352,35 +352,6 @@ class Game:
                         
         return allMoves
         
-     
-    """
-    Given a move find the current piece on the board associated with that move.
-    Returns the square that the piece is on.
-    """ 
-    def findFromSquare(self, move):        
-        # find the square that the piece is on
-        for row in self.board.board:
-            for square in row:
-                if(str(square.piece) == move.move[0]):
-                    if(square.piece.color == self.turn):
-                        # found a potential piece 
-                        # check the possible moves 
-                        potential_moves = self.getLegalMoves(square.piece)
-                        
-                        #print(f"DEBUG: Potential Moves for {square.piece}{square.label}: ", end='')
-                        #print(potential_moves)
-                        
-                        if(move in potential_moves):
-                            # found, check for duplicates
-                            if move.hasAmbiguitySymbol():
-                                if square.piece.currentSquare[0] == move.getAmbiguitySymbol():
-                                    # correct column/file
-                                    return square
-                                else:
-                                    continue
-                            # no duplicates (hopefully)
-                            return square       
- 
         
     """
     Moves a piece from 'fromLabel' to the 'toLabel'.
@@ -569,8 +540,10 @@ class Computer:
         generator = MoveGenerator(game)
         
         legal_moves = generator.generateLegalMoves()
+        print(f"Legal moves for {game.turn}: ", end="")
+        print(legal_moves)
+        
         
         if len(legal_moves) == 0:
             return None
-        
         return random.choice(legal_moves)
