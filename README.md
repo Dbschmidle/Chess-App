@@ -15,13 +15,13 @@ The goal is to be able to play chess in the terminal against a chess-bot (see pi
 
 ## How to Play
 When you run main.py, you should be greeted by a menu; from here you can load any saved games, change the theme, or toggle the side labels on the board.  
-![screenshot of the game](game_example_img.PNG)
+![screenshot of the game](images/game_example_img.PNG)
 
 ## Making a Move
 To be able to play, you'll have to be comfortable with some basic [algebraic chess notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess)).
 
 From here, all you have to do is enter the move you wish to play and the computer will automatically reply with a countermove.
-![screenshot of the game after a move has been played](game_example_img2.png)
+![screenshot of the game after a move has been played](images/game_example_img2.png)
 
 
 

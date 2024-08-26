@@ -6,7 +6,7 @@ from game import *
 """
 The board class defines the physical board that is used for the game of chess. 
     - A board is full of alternating black and white squares.
-    - Squares potentailly have pieces on them.
+    - Squares potentially have pieces on them.
 """
 class Board:
     # initalizes the board full of squares 
