@@ -14,7 +14,7 @@ The goal is to be able to play chess in the terminal against a chess-bot (see pi
 
 
 ## How to Play
-When you run main.py, you should be greeted by a menu; from here you can load any saved games, change the theme, or toggle the side labels on the board.
+When you run main.py, you should be greeted by a menu; from here you can load any saved games, change the theme, or toggle the side labels on the board.  
 ![screenshot of the game](game_example_img.PNG)
 
 ## Making a Move
