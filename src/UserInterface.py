@@ -6,7 +6,7 @@ import pygame as p
 import src.Engine as Engine
 
 
-WIDTH, HEIGHT = 256
+WIDTH, HEIGHT = 256, 256
 DIMENSION = 8
 SQUARE_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
@@ -43,10 +43,12 @@ def main():
                 squareSelected = (row, col)
                 clickLocation.append(squareSelected)
                 
-                if len(clickLocation == 2):
+                if len(clickLocation) == 2:
                     # player has clicked two seperate locations, make a move
-                    move = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
-                    
+                    newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
+                    gameState.move(newmove)
+                    clickLocation = () # reset the click locations
+                
                 
                 
                 
@@ -55,12 +57,12 @@ def main():
     clock.tick(MAX_FPS)
     p.display.flip()
     
-def drawGameState(screen: p.display, gameState: Engine.GameState) -> None:
+def drawGameState(screen, gameState: Engine.GameState) -> None:
     drawBoard(screen)
     drawPieces(screen, gameState.board)
 
 
-def drawBoard(screen: p.display) -> None:
+def drawBoard(screen) -> None:
     
 
 
