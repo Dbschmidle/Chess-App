@@ -82,6 +82,7 @@ def main():
                     print(newmove.convertToChessNotation())
                     clickLocation = [] # reset the click locations
                     highlighted_square = []
+                    squareSelected = []
             
         drawGameState(screen, gameState, highlighted_square)
         clock.tick(MAX_FPS)
