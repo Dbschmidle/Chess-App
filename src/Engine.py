@@ -23,12 +23,13 @@ class Move():
     def convertToChessNotation(self) -> str:
         return self.convertToRankFile(self.fromRow, self.fromCol) + self.convertToRankFile(self.toRow, self.toCol)
     
-    def convertToRowCol(self, rank, file) -> list[int]:
-        return None
         
     def convertToRankFile(self, row, col) -> str:
         return self.CONV_COLS_TO_FILES[col] + self.CONV_ROWS_TO_RANK[row]
         
+    def convertToRowCol(self, rank, file) -> list[int]:
+        return [self.CONV_RANK_TO_ROWS[rank], self.CONV_FILES_TO_COLS[file]]
+            
         
     def __str__(self) -> str:
         return self.convertToChessNotation()
@@ -64,5 +65,20 @@ class GameState():
         
         self.moveLog.append(move)
         self.whiteToMove = False if self.whiteToMove else True
+        
+    '''
+    Undoes the most recent move
+    '''
+    def undoMove(self) -> None:
+        if len(self.moveLog) == 0:
+            print("No move to undo")
+            return
+        move: Move = self.moveLog.pop()
+        self.board[move.fromRow][move.fromCol] = move.pieceMoved
+        self.board[move.toRow][move.toCol] = move.pieceCaptured
+        
+        self.whiteToMove = not self.whiteToMove
+        
+        
         
         

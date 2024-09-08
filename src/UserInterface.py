@@ -50,6 +50,11 @@ def main():
         for event in p.event.get():
             if(event.type == p.QUIT):
                 gameRunning = False
+            elif (event.type == p.KEYDOWN):
+                if event.key == p.K_z:
+                    gameState.undoMove()
+                    continue
+                
             elif (event.type == p.MOUSEBUTTONDOWN):
                 location = p.mouse.get_pos()
                 row = location[1] // SQUARE_SIZE
@@ -74,6 +79,7 @@ def main():
                     # player has clicked two seperate locations, make a move
                     newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
                     gameState.move(newmove)
+                    print(newmove.convertToChessNotation())
                     clickLocation = [] # reset the click locations
                     highlighted_square = []
             
