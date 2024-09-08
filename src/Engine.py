@@ -24,7 +24,7 @@ class Move():
         return self.convertToRankFile(self.fromRow, self.fromCol) + self.convertToRankFile(self.toRow, self.toCol)
     
     def convertToRowCol(self, rank, file) -> list[int]:
-        return
+        return None
         
     def convertToRankFile(self, row, col) -> str:
         return self.CONV_COLS_TO_FILES[col] + self.CONV_ROWS_TO_RANK[row]
