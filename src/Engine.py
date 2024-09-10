@@ -132,7 +132,14 @@ class GameState():
         
         return []
         
-        
+    '''
+    Gets the legal pawn moves given a pawn at a given row and col.
+    A legal move for a pawn includes:
+        - Moving forward 2 spaces if the pawn is on its starting square
+        - Move forward 2 spaces if there is no piece in front of it
+        - Capture an opposing piece diagonally
+        - TODO: En-passant move
+    '''
     def getPawnMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
@@ -177,16 +184,83 @@ class GameState():
         
         return moves
     
-    def pawnOnStartingSquare(self, row: int, col: int):
-        return True
-    
+    '''
+    Gets the legal Bishop moves given a row and col position
+    A legal move for a bishop includes:
+        - Moving diagonally in each direction until blocked by a friendly piece
+        - Capturing an enemy piece at the end of a diagonal if one exists
+    '''
     def getBishopMoves(self, row, col) -> list[Move]:
         moves: list[Move] = []
         
+        # directions of the diagonals, 
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+        
+        for direction in directions:
+            for i in range(1, len(self.board)):
+                    
+                toRow = row + direction[0]*i
+                toCol = col + direction[1]*i
+                if toRow >= 8 or toRow < 0 or toCol >= 8 or toCol < 0:
+                    # we've gone off the board in this direction!
+                    break
+                    
+                if self.hasPiece(toRow, toCol):
+                    if self.pieceIsWhite(self.board[toRow][toCol]):
+                        if self.whiteToMove:
+                            break
+                        else: 
+                            moves.append(Move((row, col), (toRow, toCol), self.board))
+                            break
+ 
+                    else:
+                        if self.whiteToMove:
+                            moves.append(Move((row, col), (toRow, toCol), self.board))
+                            break
+                        else:
+                            break
+                        
+                # no piece blocking our bishop
+                moves.append(Move((row, col), (toRow, toCol), self.board))
+                            
+        
         return moves    
+    
+    def getKnightMoves(self, row, col) -> list[Move]:
+        moves: list[Move] = []
+        
+        return moves      
+    
+    def getRookMoves(self, row, col) -> list[Move]:
+        moves: list[Move] = []
+        
+        return moves      
+    
+    def getQueenMoves(self, row, col) -> list[Move]:
+        moves: list[Move] = []
+        
+        return moves 
+    
+    def getKingMoves(self, row, col) -> list[Move]:
+        moves: list[Move] = []
+        
+        return moves      
+         
+    '''
+    Checks if a pawn is on it's starting square given a row and col indexes
+    '''
+    def pawnOnStartingSquare(self, row: int, col: int):
+        if self.whiteToMove == True:
+            if row == 6:
+                return True
+            return False
+        else:
+            if row == 1:
+                return True
+            return False
         
     '''
-    Checks if this square has a piece on it
+    Checks if this square has a piece on it.
     '''
     def hasPiece(self, row, col):
         if row < 0 or row >= 8:
