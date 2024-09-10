@@ -122,7 +122,7 @@ class GameState():
         elif piece_type == 'B':
             return self.getBishopMoves(row, col)
         elif piece_type == 'N':
-            pass
+            return self.getKnightMoves(row, col)
         elif piece_type == 'R':
             pass
         elif piece_type == 'Q':
@@ -201,7 +201,7 @@ class GameState():
                     
                 toRow = row + direction[0]*i
                 toCol = col + direction[1]*i
-                if toRow >= 8 or toRow < 0 or toCol >= 8 or toCol < 0:
+                if not self.isInBoard(toRow, toCol):
                     # we've gone off the board in this direction!
                     break
                     
@@ -226,10 +226,40 @@ class GameState():
         
         return moves    
     
+    '''
+    Gets the legal Knight moves given a row and col position
+    A legal move for a knight includes:
+        - Moving in an 'L' Shape in 8 different directions
+    '''
     def getKnightMoves(self, row, col) -> list[Move]:
         moves: list[Move] = []
         
+        directions = ((-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1))
+        
+        for direction in directions:
+            toRow = row + direction[0]
+            toCol = col + direction[1]
+            
+            if not self.isInBoard(toRow, toCol):
+                continue
+            
+            if self.hasPiece(toRow, toCol):
+                if self.board[toRow][toCol][0] == 'w':
+                    if not self.whiteToMove:
+                        moves.append(Move((row, col), (toRow, toCol), self.board))
+                        
+                else: 
+                    # piece is black
+                    if self.whiteToMove:
+                        moves.append(Move((row, col), (toRow, toCol), self.board))
+                continue
+            
+            # no piece
+            moves.append(Move((row, col), (toRow, toCol), self.board))
+                    
         return moves      
+    
+    
     
     def getRookMoves(self, row, col) -> list[Move]:
         moves: list[Move] = []
@@ -249,7 +279,7 @@ class GameState():
     '''
     Checks if a pawn is on it's starting square given a row and col indexes
     '''
-    def pawnOnStartingSquare(self, row: int, col: int):
+    def pawnOnStartingSquare(self, row: int, col: int) -> bool:
         if self.whiteToMove == True:
             if row == 6:
                 return True
@@ -262,7 +292,7 @@ class GameState():
     '''
     Checks if this square has a piece on it.
     '''
-    def hasPiece(self, row, col):
+    def hasPiece(self, row, col) -> bool:
         if row < 0 or row >= 8:
             return False
         if col < 0 or col >= 8:
@@ -270,7 +300,14 @@ class GameState():
         if self.board[row][col] == "--":
             return False
         return True
-        
+       
+    '''
+    Checks if the given row and col cooresponds to a square on the board
+    ''' 
+    def isInBoard(self, row, col) -> bool:
+        if row >= 8 or row < 0 or col >= 8 or col < 0:
+            return False
+        return True
         
     @staticmethod
     def pieceIsWhite(piece: str) -> bool:
