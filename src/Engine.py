@@ -33,6 +33,12 @@ class Move():
         
     def __str__(self) -> str:
         return self.convertToChessNotation()
+    
+    def __eq__(self, other) -> bool:
+        if str(self) == str(other):
+            return True
+        return False
+        
         
     
 """
@@ -64,7 +70,11 @@ class GameState():
         self.board[move.toRow][move.toCol] = move.pieceMoved
         
         self.moveLog.append(move)
-        self.whiteToMove = False if self.whiteToMove else True
+        self.whiteToMove = not self.whiteToMove
+        if self.whiteToMove:
+            print("Whites turn.")
+        else:
+            print("Blacks turn.")
         
     '''
     Undoes the most recent move
@@ -79,6 +89,121 @@ class GameState():
         
         self.whiteToMove = not self.whiteToMove
         
+    '''
+    Gets all the possible moves without considering checks.
+    '''
+    def getAllMoves(self) -> list[Move]:
+        move_list: list[Move] = []
+        
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
+                
+                piece = self.board[row][col]
+                if piece == "--":
+                    continue
+                
+                if GameState.pieceIsWhite(piece):
+                    if self.whiteToMove == True:
+
+                        move_list.extend(self.getMoves(piece, row, col))
+                    
+                elif not GameState.pieceIsWhite(piece):
+                    if self.whiteToMove == False:
+                        
+                        move_list.extend(self.getMoves(piece, row, col))
+        
+
+        return move_list
+        
+    def getMoves(self, piece, row, col) -> list[Move]:
+        piece_type = GameState.getPieceType(piece)
+        if piece_type == 'P':
+            return self.getPawnMoves(row, col)
+        elif piece_type == 'B':
+            return self.getBishopMoves(row, col)
+        elif piece_type == 'N':
+            pass
+        elif piece_type == 'R':
+            pass
+        elif piece_type == 'Q':
+            pass
+        elif piece_type == 'K':
+            pass
+        
+        return []
         
         
+    def getPawnMoves(self, row: int, col: int) -> list[Move]:
+        moves: list[Move] = []
         
+        if self.whiteToMove == True:
+            if not self.hasPiece(row-1, col):
+                moves.append(Move((row, col), (row-1, col), self.board))
+            
+            
+            if self.pawnOnStartingSquare(row, col) and not self.hasPiece(row-2, col):
+                fromSquare = (row, col)
+                toSquare = (row-2, col)
+                moves.append(Move(fromSquare, toSquare, self.board))
+            
+            # capture diagonally to the left 
+            if self.hasPiece(row-1, col-1):
+                if self.board[row-1][col-1][0] == 'b':
+                    moves.append(Move((row, col), (row-1, col-1), self.board))
+            # capture diagonally to the right
+            if self.hasPiece(row-1, col+1):
+                if self.board[row-1][col+1][0] == 'b':
+                    moves.append(Move((row, col), (row-1, col+1), self.board))
+                
+                
+        if self.whiteToMove == False:
+            if not self.hasPiece(row+1, col):
+                moves.append(Move((row, col), (row+1, col), self.board))
+            
+            if self.pawnOnStartingSquare(row, col) and not self.hasPiece(row+2, col):
+                fromSquare = (row, col)
+                toSquare = (row+2, col)
+                moves.append(Move(fromSquare, toSquare, self.board))
+                
+            # capture diagonally to the left 
+            if self.hasPiece(row+1, col-1):
+                if self.board[row+1][col-1][0] == 'w':
+                    moves.append(Move((row, col), (row+1, col-1), self.board))
+            # capture diagonally to the right
+            if self.hasPiece(row+1, col+1):
+                if self.board[row+1][col+1][0] == 'w':
+                    moves.append(Move((row, col), (row+1, col+1), self.board))
+                
+        
+        return moves
+    
+    def pawnOnStartingSquare(self, row: int, col: int):
+        return True
+    
+    def getBishopMoves(self, row, col) -> list[Move]:
+        moves: list[Move] = []
+        
+        return moves    
+        
+    '''
+    Checks if this square has a piece on it
+    '''
+    def hasPiece(self, row, col):
+        if row < 0 or row >= 8:
+            return False
+        if col < 0 or col >= 8:
+            return False
+        if self.board[row][col] == "--":
+            return False
+        return True
+        
+        
+    @staticmethod
+    def pieceIsWhite(piece: str) -> bool:
+        if piece[0] == 'w':
+            return True
+        return False
+    
+    @staticmethod
+    def getPieceType(piece: str) -> str:
+        return piece[1]

@@ -43,8 +43,10 @@ def main():
     
     squareSelected = []
     clickLocation = [] # tracks the first and second click location of the user 
-    
     highlighted_square = []
+    
+    valid_moves = gameState.getAllMoves()
+    moveMadeFlag = False
     
     while(gameRunning):
         for event in p.event.get():
@@ -53,6 +55,7 @@ def main():
             elif (event.type == p.KEYDOWN):
                 if event.key == p.K_z:
                     gameState.undoMove()
+                    valid_moves = gameState.getAllMoves()
                     continue
                 
             elif (event.type == p.MOUSEBUTTONDOWN):
@@ -74,15 +77,36 @@ def main():
                 
                 if len(clickLocation) == 1:
                     highlighted_square = [row, col]
+                    print("Valid Moves: [", end=" ")
+                    for move in valid_moves:
+                        print(move, end=", ")
+                    print("]\n")
                 
                 if len(clickLocation) == 2:
                     # player has clicked two seperate locations, make a move
+
                     newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
+                    
+                    # check if the move is valid
+                    if newmove not in valid_moves:
+                        highlighted_square = []
+                        squareSelected = []
+                        clickLocation = []
+                        print(f"{newmove} is not a valid move.")
+                        continue
+                    moveMadeFlag = True
+                    
                     gameState.move(newmove)
                     print(newmove.convertToChessNotation())
                     clickLocation = [] # reset the click locations
                     highlighted_square = []
                     squareSelected = []
+                    
+                if moveMadeFlag == True:
+                    valid_moves = gameState.getAllMoves()
+                    moveMadeFlag = False
+                    
+                    
             
         drawGameState(screen, gameState, highlighted_square)
         clock.tick(MAX_FPS)
@@ -90,12 +114,16 @@ def main():
                     
     
     
-    
+'''
+Draws the background squares, pieces, and highlights the square if applicable.
+'''
 def drawGameState(screen, gameState: Engine.GameState, highlighted_square) -> None:
     drawBackgroundBoard(screen, highlighted_square)
     drawPieces(screen, gameState.board)
 
-
+'''
+Draws the background squares of the board.
+'''
 def drawBackgroundBoard(screen, highlighted_square) -> None:
     for row in range(DIMENSION):
         for col in range(DIMENSION):
@@ -104,6 +132,9 @@ def drawBackgroundBoard(screen, highlighted_square) -> None:
     if len(highlighted_square) == 2:
         p.draw.rect(screen, HIGHLIGHT_COLOR, p.Rect(highlighted_square[1]*SQUARE_SIZE, highlighted_square[0]*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
+'''
+Draws the pieces on the board.
+'''
 def drawPieces(screen, board) -> None:
     for row in range(DIMENSION):
         for col in range(DIMENSION):
@@ -113,7 +144,9 @@ def drawPieces(screen, board) -> None:
             piece_fullname = INV_PIECE_ABB[piece]
             screen.blit(IMAGES[piece_fullname], p.Rect(col*SQUARE_SIZE, row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
-
+'''
+Checks if the user double clicked the same square.
+'''
 def userDoubleClickedSquare(squareSelected: list[int], row: int, col: int):
     return squareSelected == [row, col]
 
