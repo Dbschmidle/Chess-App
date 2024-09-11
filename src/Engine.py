@@ -64,6 +64,14 @@ class GameState():
         self.whiteToMove = True
         self.moveLog = []
         
+        # track both of the kings locations 
+        self.whiteKingLocation = (7, 4)
+        self.blackKingLocation = (0, 4)
+        
+        # flags for checkmate and stalemate
+        self.checkMate = False
+        self.staleMate = False
+        
             
     def move(self, move: Move) -> None:
         self.board[move.fromRow][move.fromCol] = "--"
@@ -71,10 +79,6 @@ class GameState():
         
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
-        if self.whiteToMove:
-            print("Whites turn.")
-        else:
-            print("Blacks turn.")
         
     '''
     Undoes the most recent move
@@ -88,7 +92,54 @@ class GameState():
         self.board[move.toRow][move.toCol] = move.pieceCaptured
         
         self.whiteToMove = not self.whiteToMove
+    
+    '''
+    Determines if the current player is in check
+    '''
+    def inCheck(self) -> bool:
+        if self.whiteToMove:
+            return self.squareAttacked(self.whiteKingLocation[0], self.whiteKingLocation[1])
+        else:
+            return self.squareAttacked(self.blackKingLocation[0], self.blackKingLocation[1])
+            
+    '''
+    Checks all of the opponents moves to see if the square is attacked
+    '''    
+    def squareAttacked(self, row, col) -> bool:
+        self.whiteToMove = not self.whiteToMove
         
+        opponentMoves = self.getAllMoves()
+        
+        for move in opponentMoves:
+            if move.toRow == row and move.toCol == col:
+                self.whiteToMove = not self.whiteToMove
+                return True
+            
+        self.whiteToMove = not self.whiteToMove
+        return False
+    
+    
+    '''
+    Gets all of the valid moves including checks, pins
+    '''
+    def getValidMoves(self) -> list[Move]:
+        moves = self.getAllMoves()    
+        for i in range(len(moves) - 1, -1, -1):
+            self.move(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            
+            if self.inCheck():
+                moves.remove(moves[i])
+                
+            self.undoMove()
+            self.whiteToMove = not self.whiteToMove
+        
+        if len(moves) == 0:
+            self.checkMate = True
+            
+            
+        return moves
+    
     '''
     Gets all the possible moves without considering checks.
     '''

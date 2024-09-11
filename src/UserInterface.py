@@ -45,7 +45,7 @@ def main():
     clickLocation = [] # tracks the first and second click location of the user 
     highlighted_square = []
     
-    valid_moves = gameState.getAllMoves()
+    valid_moves = gameState.getValidMoves()
     moveMadeFlag = False
     
     while(gameRunning):
@@ -55,7 +55,7 @@ def main():
             elif (event.type == p.KEYDOWN):
                 if event.key == p.K_z:
                     gameState.undoMove()
-                    valid_moves = gameState.getAllMoves()
+                    valid_moves = gameState.getValidMoves()
                     continue
                 
             elif (event.type == p.MOUSEBUTTONDOWN):
@@ -106,7 +106,7 @@ def main():
                     squareSelected = []
                     
                 if moveMadeFlag == True:
-                    valid_moves = gameState.getAllMoves()
+                    valid_moves = gameState.getValidMoves()
                     moveMadeFlag = False
                     
                     
