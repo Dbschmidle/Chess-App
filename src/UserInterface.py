@@ -89,16 +89,19 @@ def main():
                     
                     # check if the move is valid
                     if newmove not in valid_moves:
-                        highlighted_square = []
-                        squareSelected = []
+                        highlighted_square = [row, col]
+                        squareSelected = [row, col]
                         clickLocation = []
+                        clickLocation.append(squareSelected)
+                        
                         print(f"{newmove} is not a valid move.")
                         continue
                     moveMadeFlag = True
                     
                     gameState.move(newmove)
                     print(newmove.convertToChessNotation())
-                    clickLocation = [] # reset the click locations
+                    
+                    clickLocation = [] 
                     highlighted_square = []
                     squareSelected = []
                     

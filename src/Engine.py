@@ -296,7 +296,9 @@ class GameState():
 
         return moves      
     
-    
+    '''
+    A combination of the rooks and bishop moves.
+    '''
     def getQueenMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
