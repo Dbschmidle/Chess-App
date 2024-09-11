@@ -115,7 +115,7 @@ class GameState():
 
         return move_list
         
-    def getMoves(self, piece, row, col) -> list[Move]:
+    def getMoves(self, piece, row: int, col: int) -> list[Move]:
         piece_type = GameState.getPieceType(piece)
         if piece_type == 'P':
             return self.getPawnMoves(row, col)
@@ -126,9 +126,9 @@ class GameState():
         elif piece_type == 'R':
             return self.getRookMoves(row, col)
         elif piece_type == 'Q':
-            pass
+            return self.getQueenMoves(row, col)
         elif piece_type == 'K':
-            pass
+            return self.getKingMoves(row, col)
         
         return []
         
@@ -190,7 +190,7 @@ class GameState():
         - Moving diagonally in each direction until blocked by a friendly piece
         - Capturing an enemy piece at the end of a diagonal if one exists
     '''
-    def getBishopMoves(self, row, col) -> list[Move]:
+    def getBishopMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
         # directions of the diagonals, 
@@ -231,7 +231,7 @@ class GameState():
     A legal move for a knight includes:
         - Moving in an 'L' Shape in 8 different directions
     '''
-    def getKnightMoves(self, row, col) -> list[Move]:
+    def getKnightMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
         directions = ((-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1))
@@ -267,7 +267,7 @@ class GameState():
         - Moving vertically along the same column until blocked by a piece 
         - TODO: castling
     '''
-    def getRookMoves(self, row, col) -> list[Move]:
+    def getRookMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
         
@@ -297,14 +297,46 @@ class GameState():
         return moves      
     
     
-    def getQueenMoves(self, row, col) -> list[Move]:
+    def getQueenMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
+        
+        moves.extend(self.getBishopMoves(row, col))
+        moves.extend(self.getRookMoves(row, col))
         
         return moves 
     
-    def getKingMoves(self, row, col) -> list[Move]:
+    '''
+    Gets the legal King moves given a row and col position
+    A legal move for a king includes:
+        - Moving one space in any direction
+        - TODO: Not moving into check
+    '''
+    def getKingMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
+        directions = (-1, 0, 1)
+        
+        for r in directions:
+            for c in directions:
+                toRow = row + r
+                toCol = col + c
+                                
+                if not self.isInBoard(toRow, toCol):
+                    continue
+                
+                if self.hasPiece(toRow, toCol):
+                    pieceColor = self.board[toRow][toCol][0]
+                    if self.whiteToMove:
+                        if pieceColor == 'b':
+                            moves.append(Move((row, col), (toRow, toCol), self.board))
+                    else:
+                        if pieceColor == 'w':
+                            moves.append(Move((row, col), (toRow, toCol), self.board))
+                    continue
+                
+                # no piece 
+                moves.append(Move((row, col), (toRow, toCol), self.board))
+
         return moves      
          
     '''
@@ -339,6 +371,7 @@ class GameState():
         if row >= 8 or row < 0 or col >= 8 or col < 0:
             return False
         return True
+        
         
     @staticmethod
     def pieceIsWhite(piece: str) -> bool:
