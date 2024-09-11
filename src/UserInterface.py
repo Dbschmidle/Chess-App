@@ -88,22 +88,26 @@ def main():
                     newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
                     
                     # check if the move is valid
-                    if newmove not in valid_moves:
-                        highlighted_square = [row, col]
-                        squareSelected = [row, col]
-                        clickLocation = []
-                        clickLocation.append(squareSelected)
+                    for i in range(len(valid_moves)):
+                        if valid_moves[i] == newmove:
+                            # user selected move is valid
+                            moveMadeFlag = True
+                            
+                            gameState.move(valid_moves[i])
+                            print(valid_moves[i].convertToChessNotation())
+                            
+                            clickLocation = [] 
+                            highlighted_square = []
+                            squareSelected = []
+                            break
                         
-                        print(f"{newmove} is not a valid move.")
-                        continue
-                    moveMadeFlag = True
-                    
-                    gameState.move(newmove)
-                    print(newmove.convertToChessNotation())
-                    
-                    clickLocation = [] 
-                    highlighted_square = []
-                    squareSelected = []
+                        if i == len(valid_moves) - 1:
+                            highlighted_square = [row, col] if gameState.hasPiece(row, col) else [] # only highlight pieces
+                            squareSelected = [row, col]
+                            clickLocation = []
+                            clickLocation.append(squareSelected)
+                            print(f"{newmove} is not a valid move.")
+                            
                     
                 if moveMadeFlag == True:
                     valid_moves = gameState.getValidMoves()
@@ -115,6 +119,7 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
                     
+    
     
     
 '''

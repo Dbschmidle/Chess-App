@@ -18,8 +18,12 @@ class Move():
         
         self.pieceMoved = board[self.fromRow][self.fromCol]
         self.pieceCaptured = board[self.toRow][self.toCol]
-
-    
+        
+        if (self.pieceMoved == 'bP' and self.toRow == 7) or (self.pieceMoved == 'wP' and self.toRow == 0):
+            self.pawnPromotionMove = True
+        else:
+            self.pawnPromotionMove = False
+       
     def convertToChessNotation(self) -> str:
         return self.convertToRankFile(self.fromRow, self.fromCol) + self.convertToRankFile(self.toRow, self.toCol)
     
@@ -72,6 +76,12 @@ class GameState():
         self.checkMate = False
         self.staleMate = False
         
+        self.inCheck = False
+        self.pins = []
+        self.checks = []
+        
+        
+        
             
     def move(self, move: Move) -> None:
         self.board[move.fromRow][move.fromCol] = "--"
@@ -79,6 +89,18 @@ class GameState():
         
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
+        
+        if move.pieceMoved == 'bK':
+            self.blackKingLocation = (move.toRow, move.toCol)
+            
+        if move.pieceMoved == 'wK':
+            self.whiteKingLocation = (move.toRow, move.toCol)
+            
+        if move.pawnPromotionMove:
+            # auto promote to a queen for now
+            pawncolor = move.pieceMoved[0]
+            self.board[move.toRow][move.toCol] = pawncolor + "Q"
+            print(self.board[move.toRow][move.toCol])
         
     '''
     Undoes the most recent move
@@ -92,11 +114,17 @@ class GameState():
         self.board[move.toRow][move.toCol] = move.pieceCaptured
         
         self.whiteToMove = not self.whiteToMove
+        
+        if move.pieceMoved == 'bK':
+            self.blackKingLocation = (move.fromRow, move.fromCol)
+            
+        if move.pieceMoved == 'wK':
+            self.whiteKingLocation = (move.fromRow, move.fromCol)
     
     '''
     Determines if the current player is in check
     '''
-    def inCheck(self) -> bool:
+    def isInCheck(self) -> bool:
         if self.whiteToMove:
             return self.squareAttacked(self.whiteKingLocation[0], self.whiteKingLocation[1])
         else:
@@ -128,14 +156,17 @@ class GameState():
             self.move(moves[i])
             self.whiteToMove = not self.whiteToMove
             
-            if self.inCheck():
+            if self.isInCheck():
                 moves.remove(moves[i])
                 
             self.undoMove()
             self.whiteToMove = not self.whiteToMove
         
-        if len(moves) == 0:
+        if len(moves) == 0 and self.isInCheck():
             self.checkMate = True
+            
+        if len(moves) == 0:
+            self.staleMate = True
             
             
         return moves
@@ -165,6 +196,7 @@ class GameState():
         
 
         return move_list
+      
         
     def getMoves(self, piece, row: int, col: int) -> list[Move]:
         piece_type = GameState.getPieceType(piece)
@@ -190,12 +222,13 @@ class GameState():
         - Move forward 2 spaces if there is no piece in front of it
         - Capture an opposing piece diagonally
         - TODO: En-passant move
+        - TODO: Pawn Promotion
     '''
     def getPawnMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
         
         if self.whiteToMove == True:
-            if not self.hasPiece(row-1, col):
+            if not self.hasPiece(row-1, col) and self.isInBoard(row-1, col):
                 moves.append(Move((row, col), (row-1, col), self.board))
             
             
@@ -205,17 +238,17 @@ class GameState():
                 moves.append(Move(fromSquare, toSquare, self.board))
             
             # capture diagonally to the left 
-            if self.hasPiece(row-1, col-1):
+            if self.hasPiece(row-1, col-1) and self.isInBoard(row-1, col-1):
                 if self.board[row-1][col-1][0] == 'b':
                     moves.append(Move((row, col), (row-1, col-1), self.board))
             # capture diagonally to the right
-            if self.hasPiece(row-1, col+1):
+            if self.hasPiece(row-1, col+1) and self.isInBoard(row-1, col+1):
                 if self.board[row-1][col+1][0] == 'b':
                     moves.append(Move((row, col), (row-1, col+1), self.board))
                 
                 
         if self.whiteToMove == False:
-            if not self.hasPiece(row+1, col):
+            if not self.hasPiece(row+1, col) and self.isInBoard(row+1, col):
                 moves.append(Move((row, col), (row+1, col), self.board))
             
             if self.pawnOnStartingSquare(row, col) and not self.hasPiece(row+2, col):
@@ -224,11 +257,11 @@ class GameState():
                 moves.append(Move(fromSquare, toSquare, self.board))
                 
             # capture diagonally to the left 
-            if self.hasPiece(row+1, col-1):
+            if self.hasPiece(row+1, col-1) and self.isInBoard(row+1, col-1):
                 if self.board[row+1][col-1][0] == 'w':
                     moves.append(Move((row, col), (row+1, col-1), self.board))
             # capture diagonally to the right
-            if self.hasPiece(row+1, col+1):
+            if self.hasPiece(row+1, col+1) and self.isInBoard(row+1, col+1):
                 if self.board[row+1][col+1][0] == 'w':
                     moves.append(Move((row, col), (row+1, col+1), self.board))
                 
