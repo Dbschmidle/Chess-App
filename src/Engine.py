@@ -10,7 +10,7 @@ class Move():
     CONV_COLS_TO_FILES = {7: "h", 6:"g", 5:"f", 4:"e", 3:"d", 2:"c", 1:"b", 0:"a"}
     
     
-    def __init__(self, fromSquare: tuple[int, int], toSquare: tuple[int, int], board: list[list[str]]):
+    def __init__(self, fromSquare: tuple[int, int], toSquare: tuple[int, int], board: list[list[str]], enpassantMove = False):
         self.fromRow = fromSquare[0]
         self.fromCol = fromSquare[1]
         self.toRow = toSquare[0]
@@ -23,7 +23,17 @@ class Move():
             self.pawnPromotionMove = True
         else:
             self.pawnPromotionMove = False
-       
+        
+        if enpassantMove:
+            self.pieceCaptured = 'wP' if self.pieceMoved == 'bP' else 'bP'
+            
+        self.enpassantMove = enpassantMove
+        
+        
+    '''
+    Converts the move to a psuedo-chess notation format
+        - ex. (6, 4), (4, 4) -> e2e4
+    '''
     def convertToChessNotation(self) -> str:
         return self.convertToRankFile(self.fromRow, self.fromCol) + self.convertToRankFile(self.toRow, self.toCol)
     
@@ -77,8 +87,8 @@ class GameState():
         self.staleMate = False
         
         self.inCheck = False
-        self.pins = []
-        self.checks = []
+        
+        self.enpassantLocation = ()
         
         
         
@@ -101,6 +111,19 @@ class GameState():
             pawncolor = move.pieceMoved[0]
             self.board[move.toRow][move.toCol] = pawncolor + "Q"
             print(self.board[move.toRow][move.toCol])
+            
+        if move.enpassantMove:
+            # have to remove the pawn
+            move.pieceCaptured = self.board[move.fromRow][move.toCol]
+            self.board[move.fromRow][move.toCol] = '--'
+             
+            
+        # updating the viable enpassant square location
+        if move.pieceMoved[1] == 'P' and abs(move.fromRow - move.toRow) == 2:
+            self.enpassantLocation = ((move.fromRow + move.toRow // 2), move.toCol)
+        else:
+            self.enpassantLocation = ()
+        
         
     '''
     Undoes the most recent move
@@ -109,17 +132,31 @@ class GameState():
         if len(self.moveLog) == 0:
             print("No move to undo")
             return
+        
         move: Move = self.moveLog.pop()
         self.board[move.fromRow][move.fromCol] = move.pieceMoved
         self.board[move.toRow][move.toCol] = move.pieceCaptured
-        
-        self.whiteToMove = not self.whiteToMove
-        
+         
         if move.pieceMoved == 'bK':
             self.blackKingLocation = (move.fromRow, move.fromCol)
             
         if move.pieceMoved == 'wK':
             self.whiteKingLocation = (move.fromRow, move.fromCol)
+            
+        if move.enpassantMove:
+            # put the captured piece back
+            self.board[move.toRow][move.toCol] = '--'
+            self.board[move.fromRow][move.toCol] = move.pieceCaptured
+
+            self.enpassantLocation = (move.toRow, move.toCol)
+            
+        # two move pawn advance    
+        if move.pieceMoved[1] == 'P' and abs(move.fromRow - move.toRow) == 2:
+            self.enpassantLocation = ()
+            
+            
+        self.whiteToMove = not self.whiteToMove
+
     
     '''
     Determines if the current player is in check
@@ -151,6 +188,8 @@ class GameState():
     Gets all of the valid moves including checks, pins
     '''
     def getValidMoves(self) -> list[Move]:
+        tmpEnpassantOriginalLocation = self.enpassantLocation
+        
         moves = self.getAllMoves()    
         for i in range(len(moves) - 1, -1, -1):
             self.move(moves[i])
@@ -168,6 +207,7 @@ class GameState():
         if len(moves) == 0:
             self.staleMate = True
             
+        self.enpassantLocation = tmpEnpassantOriginalLocation
             
         return moves
     
@@ -222,7 +262,7 @@ class GameState():
         - Move forward 2 spaces if there is no piece in front of it
         - Capture an opposing piece diagonally
         - TODO: En-passant move
-        - TODO: Pawn Promotion
+        - Pawn Promotion, currently defaults to a queen
     '''
     def getPawnMoves(self, row: int, col: int) -> list[Move]:
         moves: list[Move] = []
@@ -241,10 +281,17 @@ class GameState():
             if self.hasPiece(row-1, col-1) and self.isInBoard(row-1, col-1):
                 if self.board[row-1][col-1][0] == 'b':
                     moves.append(Move((row, col), (row-1, col-1), self.board))
+                
+            elif (row-1, col-1) == self.enpassantLocation:
+                moves.append(Move((row, col), (row-1, col-1), self.board, enpassantMove=True))
+                    
+                    
             # capture diagonally to the right
             if self.hasPiece(row-1, col+1) and self.isInBoard(row-1, col+1):
                 if self.board[row-1][col+1][0] == 'b':
                     moves.append(Move((row, col), (row-1, col+1), self.board))
+            elif (row-1, col+1) == self.enpassantLocation:
+                moves.append(Move((row, col), (row-1, col+1), self.board, enpassantMove=True))
                 
                 
         if self.whiteToMove == False:
@@ -260,11 +307,15 @@ class GameState():
             if self.hasPiece(row+1, col-1) and self.isInBoard(row+1, col-1):
                 if self.board[row+1][col-1][0] == 'w':
                     moves.append(Move((row, col), (row+1, col-1), self.board))
+            elif (row+1, col-1) == self.enpassantLocation:
+                moves.append(Move((row, col), (row+1, col-1), self.board, enpassantMove=True))
+                    
             # capture diagonally to the right
             if self.hasPiece(row+1, col+1) and self.isInBoard(row+1, col+1):
                 if self.board[row+1][col+1][0] == 'w':
                     moves.append(Move((row, col), (row+1, col+1), self.board))
-                
+            elif (row+1, col+1) == self.enpassantLocation:
+                moves.append(Move((row, col), (row+1, col+1), self.board, enpassantMove=True))
         
         return moves
     
