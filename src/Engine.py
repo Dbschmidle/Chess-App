@@ -120,7 +120,8 @@ class GameState():
             
         # updating the viable enpassant square location
         if move.pieceMoved[1] == 'P' and abs(move.fromRow - move.toRow) == 2:
-            self.enpassantLocation = ((move.fromRow + move.toRow // 2), move.toCol)
+            self.enpassantLocation = ((move.fromRow + move.toRow) // 2, move.toCol)
+            
         else:
             self.enpassantLocation = ()
         
