@@ -117,9 +117,9 @@ class GameState():
         self.enpassantLocation = ()
         
         # castling rights, start the game with all rights
-        self.castlingRights = CastleRights(True,True,True,True)
         # logs the castling rights in case a move is undone
-        self.castleRightsLog = [self.castlingRights.deep_copy()]
+        self.castleRightsLog = [CastleRights(True,True,True,True)]
+        self.currentCastlingRights = self.castleRightsLog[0]
         
         
         
@@ -175,7 +175,9 @@ class GameState():
                 
 
         # update the castling rights 
+        self.castleRightsLog.append(self.currentCastlingRights.deep_copy())
         self.updateCastlingRights(move)
+        
         
         # change turn
         self.whiteToMove = not self.whiteToMove
@@ -186,8 +188,6 @@ class GameState():
     '''
     def undoMove(self) -> None:
         if len(self.moveLog) == 0:
-            self.castleRightsLog.pop()    
-            self.castleRights = self.castleRightsLog[-1]
             print("No move to undo")
             return
         
@@ -213,7 +213,7 @@ class GameState():
             self.enpassantLocation = ()
             
         self.castleRightsLog.pop()    
-        self.castleRights = self.castleRightsLog[-1]
+        self.currentCastlingRights = self.castleRightsLog[len(self.castleRightsLog)-1].deep_copy()
     
         if move.castling:
             if move.toCol - move.fromCol == 2:
@@ -229,7 +229,6 @@ class GameState():
                 self.board[move.fromRow][move.fromCol-4] = self.board[move.fromRow][move.fromCol-1]
                 self.board[move.fromRow][move.fromCol-1] = '--'
                 
-    
         self.whiteToMove = not self.whiteToMove
 
     
@@ -237,29 +236,27 @@ class GameState():
     Updates the castling rights for white or black given a move.
     '''
     def updateCastlingRights(self, move: Move) -> None:
-        newRights = CastleRights(True, True, True, True)
-        
+    
         if move.pieceMoved == 'wK':
-            newRights.wKingSide = False
-            newRights.wQueenSide = False            
+            self.currentCastlingRights.wKingSide = False
+            self.currentCastlingRights.wQueenSide = False            
             
         elif move.pieceMoved == 'wR':
-            if move.fromRow == 7 and  move.fromCol == 7:
-                newRights.wKingSide = False
+            if move.fromRow == 7 and move.fromCol == 7:
+                self.currentCastlingRights.wKingSide = False
             else:
-                newRights.wQueenSide = False
+                self.currentCastlingRights.wQueenSide = False
     
         elif move.pieceMoved == 'bK':
-            newRights.bKingSide = False
-            newRights.bQueenSide = False 
+            self.currentCastlingRights.bKingSide = False
+            self.currentCastlingRights.bQueenSide = False 
             
         elif move.pieceMoved == 'bR':
             if move.fromRow == 0 and move.fromCol == 7:
-                newRights.bKingSide = False
+                self.currentCastlingRights.bKingSide = False
             else:
-                newRights.bQueenSide = False
+                self.currentCastlingRights.bQueenSide = False
     
-        self.castleRightsLog.append(newRights)
     
     
     '''
@@ -293,15 +290,12 @@ class GameState():
     '''
     def getValidMoves(self) -> list[Move]:
         tmpEnpassantOriginalLocation = self.enpassantLocation
-        tmpCastleRights = self.castlingRights.deep_copy()
+        tmpCastleRights = self.currentCastlingRights.deep_copy()
         
         moves = []
         
         castleMoves = self.getCastleMoves(0,0)
-        print("castle moves: [", end='')
-        for m in castleMoves:
-            print(m, end=", ")
-        print("]")
+
         moves.extend(castleMoves)
         
         moves.extend(self.getAllMoves())
@@ -324,7 +318,7 @@ class GameState():
             self.staleMate = True
             
         self.enpassantLocation = tmpEnpassantOriginalLocation
-        self.castlingRights = tmpCastleRights
+        self.currentCastlingRights = tmpCastleRights
             
         return moves
     
@@ -613,18 +607,18 @@ class GameState():
         
         if self.whiteToMove:
             
-            if self.castlingRights.wKingSide:
+            if self.currentCastlingRights.wKingSide:
                 moves.extend(self.getKingSideCastleMoves())
             
-            if self.castlingRights.wQueenSide:
+            if self.currentCastlingRights.wQueenSide:
                 moves.extend(self.getQueenSideCastleMoves())
             
         
         if not self.whiteToMove:
-            if self.castlingRights.bKingSide:
+            if self.currentCastlingRights.bKingSide:
                 moves.extend(self.getKingSideCastleMoves())
             
-            if self.castlingRights.bQueenSide:
+            if self.currentCastlingRights.bQueenSide:
                 moves.extend(self.getQueenSideCastleMoves())
 
         return moves
@@ -666,12 +660,10 @@ class GameState():
         
         # check for a piece inbetween the king the king-side rook
         if self.hasPiece(kingPos[0], kingPos[1]-1) or self.hasPiece(kingPos[0], kingPos[1]-2) or self.hasPiece(kingPos[0], kingPos[1]-3):
-            print("error 1")
             return moves 
         
         # check for if the squares inbetween the king and king-side rook are being targeted
         if self.squareAttacked(kingPos[0], kingPos[1]-1) or self.squareAttacked(kingPos[0], kingPos[1]-2) or self.hasPiece(kingPos[0], kingPos[1]-3):
-            print("error 2")
             return moves 
             
         

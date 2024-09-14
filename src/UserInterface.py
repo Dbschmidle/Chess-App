@@ -95,7 +95,7 @@ def main():
                             moveMadeFlag = True
                             
                             gameState.move(valid_moves[i])
-                            print("Rights: "+str(gameState.castleRights))
+
                             print(valid_moves[i].convertToChessNotation())
                             
                             clickLocation = [] 
