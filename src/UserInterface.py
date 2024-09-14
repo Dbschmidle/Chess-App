@@ -63,7 +63,7 @@ def main():
                 row = location[1] // SQUARE_SIZE
                 col = location[0] // SQUARE_SIZE
                 
-                print(f"Click Registered at: ({row}, {col})")
+                #print(f"Click Registered at: ({row}, {col})")
                 
                 if userDoubleClickedSquare(squareSelected, row, col):
                     # user clicked the same square, clear the clickLocation array
@@ -77,7 +77,8 @@ def main():
                 
                 if len(clickLocation) == 1:
                     highlighted_square = [row, col]
-                    print("Valid Moves: [", end=" ")
+                    turnStr = "white" if gameState.whiteToMove else "black"
+                    print(f"Valid Moves for {turnStr}: [", end=" ")
                     for move in valid_moves:
                         print(move, end=", ")
                     print("]\n")
@@ -94,6 +95,7 @@ def main():
                             moveMadeFlag = True
                             
                             gameState.move(valid_moves[i])
+                            print("Rights: "+str(gameState.castleRights))
                             print(valid_moves[i].convertToChessNotation())
                             
                             clickLocation = [] 
