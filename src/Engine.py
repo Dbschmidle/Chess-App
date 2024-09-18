@@ -1,11 +1,6 @@
-       
-
 '''
 Stores the information of a move, as well as a reference to the board gamestate.
 '''
-from types import NoneType
-
-
 class Move():
     CONV_RANK_TO_ROWS = {"1":7, "2":6, "3":5, "4":4, "5":3, "6":2, "7":1, "8":0}
     CONV_FILES_TO_COLS = {"a":0, "b":1, "c":2, "d":3, "e":4, "f":5, "g":6, "h":7}

@@ -4,6 +4,7 @@ This file is responsible for handling user I/O and displaying the current gamest
 
 import pygame as p
 import Engine
+import ChessAI
 
 
 WIDTH, HEIGHT = 512,512
@@ -48,7 +49,14 @@ def main():
     valid_moves = gameState.getValidMoves()
     moveMadeFlag = False
     
+    # flags to determine if the player is white or black
+    playerOne = True
+    playerTwo = False
+    
     while(gameRunning):
+        
+        playerTurn = (gameState.whiteToMove and playerOne) or (not gameState.whiteToMove and playerTwo)
+        
         for event in p.event.get():
             if(event.type == p.QUIT):
                 gameRunning = False
@@ -59,61 +67,72 @@ def main():
                     continue
                 
             elif (event.type == p.MOUSEBUTTONDOWN):
-                location = p.mouse.get_pos()
-                row = location[1] // SQUARE_SIZE
-                col = location[0] // SQUARE_SIZE
                 
-                #print(f"Click Registered at: ({row}, {col})")
-                
-                if userDoubleClickedSquare(squareSelected, row, col):
-                    # user clicked the same square, clear the clickLocation array
-                    squareSelected = []
-                    clickLocation = []
-                    highlighted_square = []
-                    continue
-                
-                squareSelected = [row, col]
-                clickLocation.append(squareSelected)
-                
-                if len(clickLocation) == 1:
-                    highlighted_square = [row, col]
-                    turnStr = "white" if gameState.whiteToMove else "black"
-                    print(f"Valid Moves for {turnStr}: [", end=" ")
-                    for move in valid_moves:
-                        print(move, end=", ")
-                    print("]\n")
-                
-                if len(clickLocation) == 2:
-                    # player has clicked two seperate locations, make a move
-
-                    newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
+                if playerTurn: # only allow mouseclicks when its the players turn
                     
-                    # check if the move is valid
-                    for i in range(len(valid_moves)):
-                        if valid_moves[i] == newmove:
-                            # user selected move is valid
-                            moveMadeFlag = True
-                            
-                            gameState.move(valid_moves[i])
-
-                            print(valid_moves[i].convertToChessNotation())
-                            
-                            clickLocation = [] 
-                            highlighted_square = []
-                            squareSelected = []
-                            break
+                    location = p.mouse.get_pos()
+                    row = location[1] // SQUARE_SIZE
+                    col = location[0] // SQUARE_SIZE
+                    
+                    
+                    if userDoubleClickedSquare(squareSelected, row, col):
+                        # user clicked the same square, clear the clickLocation array
+                        squareSelected = []
+                        clickLocation = []
+                        highlighted_square = []
+                    
+                    else:
                         
-                        if i == len(valid_moves) - 1:
-                            highlighted_square = [row, col] if gameState.hasPiece(row, col) else [] # only highlight pieces
-                            squareSelected = [row, col]
-                            clickLocation = []
-                            clickLocation.append(squareSelected)
-                            print(f"{newmove} is not a valid move.")
+                        squareSelected = [row, col]
+                        clickLocation.append(squareSelected)
+                        
+                    if len(clickLocation) == 1:
+                        highlighted_square = [row, col]
+                        turnStr = "white" if gameState.whiteToMove else "black"
+                        print(f"Valid Moves for {turnStr}: [", end=" ")
+                        for move in valid_moves:
+                            print(move, end=", ")
+                        print("]\n")
+                        
+                    if len(clickLocation) == 2:
+                        # player has clicked two seperate locations, make a move
+
+                        newmove = Engine.Move(clickLocation[0], clickLocation[1], gameState.board)
                             
+                        # check if the move is valid
+                        for i in range(len(valid_moves)):
+                            if valid_moves[i] == newmove:
+                                # user selected move is valid
+                                moveMadeFlag = True
+                                    
+                                gameState.move(valid_moves[i])
+
+                                print(valid_moves[i].convertToChessNotation())
+                                    
+                                clickLocation = [] 
+                                highlighted_square = []
+                                squareSelected = []
+                                break
+                                
+                            if i == len(valid_moves) - 1:
+                                # user tried to make an invalid move
+                                highlighted_square = [row, col] if gameState.hasPiece(row, col) else [] # only highlight pieces
+                                squareSelected = [row, col]
+                                clickLocation = []
+                                clickLocation.append(squareSelected)
+                                print(f"{newmove} is not a valid move.")
+                                
                     
-                if moveMadeFlag == True:
-                    valid_moves = gameState.getValidMoves()
-                    moveMadeFlag = False
+        if not playerTurn:
+            # chessbot logic
+            randMove = ChessAI.ChessBot.getRandomMove(valid_moves)
+            gameState.move(randMove)
+            moveMadeFlag = True
+                
+                
+        if moveMadeFlag == True:
+            valid_moves = gameState.getValidMoves()
+            moveMadeFlag = False
                     
                     
             
@@ -121,8 +140,6 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
                     
-    
-    
     
 '''
 Draws the background squares, pieces, and highlights the square if applicable.
@@ -171,6 +188,15 @@ def loadImages() -> None:
         local_path = "images/"+name+".png"
         IMAGES[name] = p.transform.scale(p.image.load(local_path), (SQUARE_SIZE, SQUARE_SIZE))
     
+    
+def drawGameOver(screen):
+    font = p.font.Font("Cambria", 32)
+    text = font.render("Hello!", True, p.Color("black"))
+    textRect = text.get_rect()
+    
+    textRect.center = (WIDTH//2, HEIGHT//2)
+
+
 
 if __name__ == "__main__":
     main()
