@@ -125,8 +125,8 @@ def main():
                     
         if not playerTurn:
             # chessbot logic
-            randMove = ChessAI.ChessBot.getRandomMove(valid_moves)
-            gameState.move(randMove)
+            chessBotMove = ChessAI.ChessBot.greedyChoice(gameState, valid_moves)
+            gameState.move(chessBotMove)
             moveMadeFlag = True
                 
                 
