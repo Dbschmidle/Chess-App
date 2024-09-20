@@ -137,5 +137,47 @@ class ChessBot:
     
     
     @staticmethod
+    def getNegaMaxAlphaBeta(gameState: GameState, valid_moves: list[Move], depth: int, turnMult: int, alpha: int, beta: int):
+        global nextMove
+        if depth == 0:
+            return turnMult * ChessBot.scoreMaterial(gameState.board)
+
+        maxScore = -CHECKMATE_VALUE
+            
+        for move in valid_moves:
+            gameState.move(move)
+            
+            nextMoves = gameState.getValidMoves()
+            
+            # make a recursive call but flip and negate alpha and beta parameters
+            score = -ChessBot.getNegaMaxAlphaBeta(gameState, nextMoves, depth - 1, -turnMult, -beta, -alpha)
+
+            if score > maxScore:
+                maxScore = score
+                if depth == MAX_DEPTH:
+                    nextMove = move
+            
+            gameState.undoMove()        
+            if maxScore > alpha:
+                alpha = maxScore
+                
+            if alpha >= beta:
+                break
+            
+            
+        
+        return maxScore
+            
+    @staticmethod
+    def getNegaMaxMove(gameState: GameState, valid_moves: list[Move]):
+        global nextMove
+        nextMove = valid_moves[0]
+        
+        ChessBot.getNegaMaxAlphaBeta(gameState, valid_moves, MAX_DEPTH, 1 if gameState.whiteToMove else -1, -CHECKMATE_VALUE, CHECKMATE_VALUE)
+        
+        return nextMove
+        
+    
+    @staticmethod
     def getRandomMove(validMoves: list[Move]) -> Move:
         return random.choice(validMoves)

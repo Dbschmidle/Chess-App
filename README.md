@@ -1,12 +1,12 @@
-# Chess Engine
+# Chess Engine + ChessBot A.I.
 ## Description 
-This is a personal python project for learning purposes. 
-**Deliverables**
-The goal is to be able to play chess in the terminal against a chess-bot (see pictures below). Functionality for this game should be to:
+This is a personal python project for learning purposes. <br><br>
+**Deliverables** <br>
+
 1. Play against the computer (a chess bot)
 2. Play against another player 
 3. Save games locally to disk / boot saved games during runtime.
-4. Provide an intuitive user interface 
+4. Provide an intuitive user interface using pygame
 
 ---
 
@@ -16,7 +16,7 @@ The goal is to be able to play chess in the terminal against a chess-bot (see pi
 2. Install the latest version of [pygame](https://www.pygame.org/download.shtml)
 
 ## Option 2
-2. Run "main.exe" in the dist directory
+1. Run "main.exe" in the dist directory
 
 
 ## How to Play
@@ -24,6 +24,12 @@ The goal is to be able to play chess in the terminal against a chess-bot (see pi
 
 ## Making a Move
 
+
+
+## Algorithm References 
+[1] https://www.chessprogramming.org/Minimax <br>
+[2] https://www.chessprogramming.org/Negamax <br>
+[3] https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
 
 **Known Bugs**
 
