@@ -125,7 +125,7 @@ def main():
                     
         if not playerTurn:
             # chessbot logic
-            chessBotMove = ChessAI.ChessBot.greedyChoice(gameState, valid_moves)
+            chessBotMove = ChessAI.ChessBot.findMoveMiniMax(gameState, valid_moves)
             gameState.move(chessBotMove)
             moveMadeFlag = True
                 

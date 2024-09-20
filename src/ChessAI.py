@@ -1,8 +1,6 @@
 '''
 Handles the logic for the computer chess 'bot'. 
 
-Currently just gets a random move
-
 '''
 
 import random
@@ -11,6 +9,7 @@ from Engine import *
 
 CHECKMATE_VALUE = 100
 STALEMATE_VALUE = 0
+MAX_DEPTH = 2
 
 
 MATERIAL_VALUE = {
@@ -79,6 +78,62 @@ class ChessBot:
             
         return bestMove
             
+    @staticmethod
+    def findMoveMiniMax(gameState: GameState, valid_moves: list[Move]):
+        global nextMove
+        nextMove = valid_moves[0]
+        ChessBot.miniMax(gameState, valid_moves, MAX_DEPTH, gameState.whiteToMove)
+        return nextMove
+
+
+    '''
+    Recursive implementation for the minimize-maximize chess algorithm 
+    '''
+    @staticmethod
+    def miniMax(gameState: GameState, valid_moves: list[Move], depth: int, whiteToMove: bool) -> int:
+        global nextMove
+        if depth == 0:
+            return ChessBot.scoreMaterial(gameState.board)
+    
+        if whiteToMove:
+            maxScore = -CHECKMATE_VALUE
+            
+            for move in valid_moves:
+                # make the move
+                gameState.move(move)
+                
+                new_valid_moves = gameState.getValidMoves()
+                
+                score = ChessBot.miniMax(gameState, new_valid_moves, depth-1, not whiteToMove)
+            
+                if score > maxScore:
+                    maxScore = score
+                    if depth == MAX_DEPTH:
+                        nextMove = move
+    
+                gameState.undoMove()
+                
+            return maxScore
+
+        else: 
+            minScore = CHECKMATE_VALUE
+            
+            for move in valid_moves:
+                # make the move
+                gameState.move(move)
+                
+                new_valid_moves = gameState.getValidMoves()
+                
+                score = ChessBot.miniMax(gameState, new_valid_moves, depth-1, not whiteToMove)
+            
+                if score < minScore:
+                    minScore = score
+                    if depth == MAX_DEPTH:
+                        nextMove = move
+    
+                gameState.undoMove()
+                
+            return minScore
     
     
     @staticmethod
