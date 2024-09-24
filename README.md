@@ -11,12 +11,9 @@ This is a personal python project for learning purposes. <br><br>
 ---
 
 # How to Run
-## Option 1
 1. Install the latest version of [python](https://www.python.org/downloads/) 
 2. Install the latest version of [pygame](https://www.pygame.org/download.shtml)
-
-## Option 2
-1. Run "main.exe" in the dist directory
+3. Run 'UserInterface.py'
 
 
 ## How to Play
