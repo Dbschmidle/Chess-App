@@ -5,8 +5,7 @@ This is a personal python project for learning purposes. <br><br>
 
 1. Play against the computer (a chess bot)
 2. Play against another player 
-3. Save games locally to disk / boot saved games during runtime.
-4. Provide an intuitive user interface using pygame
+3. Provide an intuitive user interface using pygame
 
 ---
 
@@ -14,13 +13,6 @@ This is a personal python project for learning purposes. <br><br>
 1. Install the latest version of [python](https://www.python.org/downloads/) 
 2. Install the latest version of [pygame](https://www.pygame.org/download.shtml)
 3. Run 'UserInterface.py'
-
-
-## How to Play
-
-
-## Making a Move
-
 
 
 ## Algorithm References 

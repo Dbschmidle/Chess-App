@@ -3,13 +3,14 @@ Handles the logic for the computer chess 'bot'.
 
 '''
 
+from queue import Queue
 import random
 from Engine import *
 
 
 CHECKMATE_VALUE = 100
 STALEMATE_VALUE = 0
-MAX_DEPTH = 2
+MAX_DEPTH = 3
 
 
 MATERIAL_VALUE = {
@@ -169,13 +170,16 @@ class ChessBot:
         return maxScore
             
     @staticmethod
-    def getNegaMaxMove(gameState: GameState, valid_moves: list[Move]):
+    def getNegaMaxMove(gameState: GameState, valid_moves: list[Move], ret_queue: Queue):
         global nextMove
         nextMove = valid_moves[0]
         
         ChessBot.getNegaMaxAlphaBeta(gameState, valid_moves, MAX_DEPTH, 1 if gameState.whiteToMove else -1, -CHECKMATE_VALUE, CHECKMATE_VALUE)
         
-        return nextMove
+        # instead of returing, put the nextMove in the valid queue
+        ret_queue.put(nextMove)
+        
+        #return nextMove
         
     
     @staticmethod

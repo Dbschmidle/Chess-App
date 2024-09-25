@@ -5,6 +5,8 @@ This file is responsible for handling user I/O and displaying the current gamest
 import pygame as p
 import Engine
 import ChessAI
+from multiprocessing import Process, Queue
+
 
 
 WIDTH, HEIGHT = 512,512
@@ -52,6 +54,8 @@ def main():
     # flags to determine if the player is white or black
     playerOne = True
     playerTwo = False
+    
+    ChessBotThinking = False
     
     while(gameRunning):
         
@@ -124,10 +128,23 @@ def main():
                                 
                     
         if not playerTurn:
-            # chessbot logic
-            chessBotMove = ChessAI.ChessBot.getNegaMaxMove(gameState, valid_moves)
-            gameState.move(chessBotMove)
-            moveMadeFlag = True
+            if not ChessBotThinking:
+                ChessBotThinking = True
+                
+                ret_queue = Queue() # FIFO
+                moveFinder_Proc = Process(target=ChessAI.ChessBot.getNegaMaxMove, args=(gameState, valid_moves, ret_queue))
+                moveFinder_Proc.start()
+                # chessbot logic
+                
+            if not moveFinder_Proc.is_alive():
+                print("thread done thinking...")
+
+                chessBotMove = ret_queue.get()
+            
+                gameState.move(chessBotMove)
+                moveMadeFlag = True
+                
+                ChessBotThinking = False
                 
                 
         if moveMadeFlag == True:
