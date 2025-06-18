@@ -57,6 +57,8 @@ def main():
     
     ChessBotThinking = False
     
+    moveFinder_Proc = None
+    
     while(gameRunning):
         
         playerTurn = (gameState.whiteToMove and playerOne) or (not gameState.whiteToMove and playerTwo)
@@ -125,18 +127,24 @@ def main():
                                 clickLocation = []
                                 clickLocation.append(squareSelected)
                                 print(f"{newmove} is not a valid move.")
-                                
-                    
+                            
+        
         if not playerTurn:
+            
             if not ChessBotThinking:
                 ChessBotThinking = True
                 
                 ret_queue = Queue() # FIFO
-                moveFinder_Proc = Process(target=ChessAI.ChessBot.getNegaMaxMove, args=(gameState, valid_moves, ret_queue))
+                
+                moveFinder_Proc = Process(
+                    target=ChessAI.ChessBot.getNegaMaxMove,
+                    args=(gameState, valid_moves, ret_queue)
+                    )
+                
                 moveFinder_Proc.start()
                 # chessbot logic
                 
-            if not moveFinder_Proc.is_alive():
+            elif not moveFinder_Proc.is_alive():
                 print("thread done thinking...")
 
                 chessBotMove = ret_queue.get()
